@@ -77,18 +77,20 @@ tests:
 
 | Test | Result | Date |
 |------|--------|------|
-| R1_parity_with_method_side_golden | ⚪ | |
-| R1_defaults_when_config_absent | ⚪ | |
-| R1_check_clean_both_polarities | ⚪ | |
-| R2_publish_end_to_end_delta_idempotent | ⚪ | |
-| R2_refuse_wrong_account | ⚪ | |
-| R2_refuse_unreachable_remote | ⚪ | |
-| R2_refuse_pending_plus_dirty | ⚪ | |
-| R2_probe_fails_closed | ⚪ | |
-| R3_seam_surface_distinguishable_exits | ⚪ | |
-| R3_consumer_surface_grep_rows | ⚪ | |
-| R4_full_suite_including_the_plugin_guard | ⚪ | |
-| R4_cold_ci_built_export | ⚪ | |
+| R1_parity_with_method_side_golden | ✅ | 2026-11-22 |
+| R1_defaults_when_config_absent | ✅ | 2026-11-22 |
+| R1_check_clean_both_polarities | ✅ | 2026-11-22 |
+| R2_publish_end_to_end_delta_idempotent | ✅ | 2026-11-22 |
+| R2_refuse_wrong_account | ✅ | 2026-11-22 |
+| R2_refuse_unreachable_remote | ✅ | 2026-11-22 |
+| R2_refuse_pending_plus_dirty | ✅ | 2026-11-22 |
+| R2_probe_fails_closed | ✅ | 2026-11-22 |
+| R3_seam_surface_distinguishable_exits | ✅ | 2026-11-22 |
+| R3_consumer_surface_grep_rows | ✅ | 2026-11-22 |
+| R4_full_suite_including_the_plugin_guard | ✅ | 2026-11-22 |
+| R4_cold_ci_built_export | ✅ | 2026-11-22 |
+
+Run at b969d490b3b3baa6a91ca5036715437c6eea829e
 
 ## Related
 
