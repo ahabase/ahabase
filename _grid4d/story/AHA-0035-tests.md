@@ -54,8 +54,7 @@ tests:
 | R3_playground_suite_fresh_workspace | ✅ | 2026-11-22 |
 | R4_cold_ci_built_export | ✅ | 2026-11-22 |
 
-Run at 85d24d6cd16ab8581b4e4416530bac2947ca08d9
-
+Run at 5f10bab79fc88dc4ad45136c099f03dc8c5424c9
 ## Related
 
 - [AHA-0035](AHA-0035) - Parent story
