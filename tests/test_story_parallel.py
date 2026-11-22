@@ -285,7 +285,8 @@ def test_r4b_a_failure_inside_the_mint_cleans_up_and_refuses_by_name(
 
     # targeted restore - a bare undo would also drop the fixture's
     # AHABASE_WORKSPACE pin (same monkeypatch instance), and the next
-    # mint would land in the real ~/ahabase workspace (AHA-0035)
+    # mint would land in the real ~/ahabase workspace
+    # (issue-monkeypatch-undo-drops-fixture-env-pins)
     monkeypatch.setattr(story, "fill", original)
     assert story.create(load(repo), "recovered story").name == "DEMO-0002"
 
@@ -326,7 +327,7 @@ def test_r4b_a_failure_inside_the_mint_cleans_up_and_refuses_by_name(
     assert not (repo.parent / "_worktrees" / repo.name / "DEMO-0003").exists()
     assert sorted(_branches(repo)) == ["feature/DEMO-0002-recovered-story", "main"]
 
-    monkeypatch.setattr(story, "fill", original)  # targeted, never a bare undo
+    monkeypatch.setattr(story, "fill", original)  # targeted, never a bare undo (issue-monkeypatch-undo-drops-fixture-env-pins)
     assert story.create(load(repo), "second recovery").name == "DEMO-0003"
 
 
