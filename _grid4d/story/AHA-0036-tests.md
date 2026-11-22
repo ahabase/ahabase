@@ -4,7 +4,7 @@
 
 ## Design
 
-One row per requirement leg, every leg standalone, both polarities inside each row's population. The in-tree suites run with the development venv against `PYTHONPATH=$PWD/src`. The parity row is the port's anchor: the golden mirror under `tests/fixtures/wiki-golden/` was captured 2026-11-22 (landing day) from a live method-side run of sync + generate over the fixture epic - the capture config and tree are embedded verbatim in `tests/test_wiki.py` (`FIXTURE_YAML`, `_fixture_epic`), so the row re-measures the same input the golden was produced from; the suite carries the golden, not a dependency on the method package (the cold leg and any consumer install have no method CLI to call). The capture also measured the preserved-directory quirk the port documents: an unquoted `dir/::` YAML key parses as `dir/:` and silently degrades to a skipped manual mapping - the row's config uses the quoted form and the blueprint documents the quoting. The publish rows run entirely against throwaway local bare `*.wiki.git` remotes with git isolated from the host (`GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_SYSTEM=/dev/null`, the commit identity from the environment) and the identity probe pinned at its seam (`account_of_safe_login` monkeypatched) - the fail-closed gate runs measured while the credential chain stays offline; no live GitHub anywhere in the suite. The R4 cold row is the standing public-push gate, the same command shape as AHA-0035's: HEAD exported (never the dirty tree), wheel built in a fresh venv, installed, `import ahabase` witnessed resolving into that venv, full pytest from the exported tree - the passed count recorded in the story document.
+One row per requirement leg, every leg standalone, both polarities inside each row's population. The in-tree suites run with the development venv against `PYTHONPATH=$PWD/src`. The parity row is the port's anchor: the golden mirror under `tests/fixtures/wiki-golden/` was captured 2026-11-22 (landing day) from a live method-side run of sync + generate over the fixture epic - the capture config and tree are embedded verbatim in `tests/test_wiki.py` (`FIXTURE_YAML`, `_fixture_epic`), so the row re-measures the same input the golden was produced from; the suite carries the golden, not a dependency on the method package (the cold leg and any consumer install have no method CLI to call). The capture also measured the preserved-directory quirk the port documents: an unquoted `dir/::` YAML key parses as `dir/:` and silently degrades to a skipped manual mapping - the row's config uses the quoted form and the blueprint documents the quoting. The publish rows run entirely against throwaway local bare `*.wiki.git` remotes with git isolated from the host (`GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_SYSTEM=/dev/null`, the commit identity from the environment) and the identity probe pinned at its seam (`account_of_safe_login` monkeypatched) - the fail-closed gate runs measured while the credential chain stays offline; no live GitHub anywhere in the suite. The round-1 rows (both review seats found the probe dead under the seam pin) break the pin deliberately: two rows drive the REAL probe through a stub gh on PATH (the login returned, the failure polarity refusing), one end-to-end row publishes with the probe real and only the remote fixture-local, and the token-scrub witness installs a pre-push hook through `GIT_TEMPLATE_DIR` at the mirror's init and reads the push child's environment - all three were red before the fix and green after. The R4 cold row is the standing public-push gate, the same command shape as AHA-0035's: HEAD exported (never the dirty tree), wheel built in a fresh venv, installed, `import ahabase` witnessed resolving into that venv, full pytest from the exported tree - the passed count recorded in the story document.
 
 ## Definition
 
@@ -51,6 +51,21 @@ tests:
     command: 'PYTHONPATH=$PWD/src ~/ahabase/ahabase/.venv/bin/python -m pytest -q tests/test_wiki_publish.py::test_account_probe_fails_closed_without_gh'
     expect:
       exit_code: 0
+  - name: R2_probe_returns_the_login_both_polarities
+    description: 'round-1 finding 1 held green only because every row pinned the probe at its seam - this row drives the REAL function with a stub gh on PATH: a printed login is returned (before the fix the function fell off the end and returned None, so the gate refused every real run), a failing gh refuses with the remedy; an ambient GH_TOKEN is present and is never a fallback'
+    command: 'PYTHONPATH=$PWD/src ~/ahabase/ahabase/.venv/bin/python -m pytest -q tests/test_wiki_publish.py::test_probe_returns_the_login_both_polarities'
+    expect:
+      exit_code: 0
+  - name: R2_publish_end_to_end_with_the_real_probe
+    description: 'the coverage gap itself - end to end with the probe REAL (only the remote is fixture-local): a stub gh answers the identity gate, the declared account matches, and the door clones, commits and pushes; red before the fix (the probe returned None), green after'
+    command: 'PYTHONPATH=$PWD/src ~/ahabase/ahabase/.venv/bin/python -m pytest -q tests/test_wiki_publish.py::test_publish_end_to_end_with_the_real_probe'
+    expect:
+      exit_code: 0
+  - name: R2_push_child_never_sees_ambient_tokens
+    description: 'round-1 finding 2 - the gate scrubbed the ambient token variables from the probe child but the push child inherited them (a credential helper preferring GH_TOKEN could push as the ambient account while the gate had proven the safe): a pre-push hook installed through GIT_TEMPLATE_DIR at the mirror init dumps the push child environment, and GH_TOKEN with its value are absent while the push succeeds'
+    command: 'PYTHONPATH=$PWD/src ~/ahabase/ahabase/.venv/bin/python -m pytest -q tests/test_wiki_publish.py::test_push_child_never_sees_ambient_tokens'
+    expect:
+      exit_code: 0
   - name: R3_seam_surface_distinguishable_exits
     description: 'the seam the flip relies on - six subcommands present; the exits distinguish the outcomes (0 done, 1 refused with the remedy printed for an omitted name and an unknown epic, 2 usage, 3 duplicates found)'
     command: 'PYTHONPATH=$PWD/src ~/ahabase/ahabase/.venv/bin/python -m pytest -q tests/test_wiki.py::test_seam_surface_six_subcommands_distinguishable_exits'
@@ -85,12 +100,15 @@ tests:
 | R2_refuse_unreachable_remote | ✅ | 2026-11-22 |
 | R2_refuse_pending_plus_dirty | ✅ | 2026-11-22 |
 | R2_probe_fails_closed | ✅ | 2026-11-22 |
+| R2_probe_returns_the_login_both_polarities | ✅ | 2026-11-22 |
+| R2_publish_end_to_end_with_the_real_probe | ✅ | 2026-11-22 |
+| R2_push_child_never_sees_ambient_tokens | ✅ | 2026-11-22 |
 | R3_seam_surface_distinguishable_exits | ✅ | 2026-11-22 |
 | R3_consumer_surface_grep_rows | ✅ | 2026-11-22 |
 | R4_full_suite_including_the_plugin_guard | ✅ | 2026-11-22 |
 | R4_cold_ci_built_export | ✅ | 2026-11-22 |
 
-Run at b969d490b3b3baa6a91ca5036715437c6eea829e
+Run at b969d490b3b3baa6a91ca5036715437c6eea829e (rows R1 and R2 through R2_probe_fails_closed, R3 and R4 at the landing head); the round-1 rows and the re-measured counts at 7453a49dd46dd95b03a904fe6a2b85a0144d6607 (full suite 496 passed, cold CI on the built export 496 passed)
 
 ## Related
 
