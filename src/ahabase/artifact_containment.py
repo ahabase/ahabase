@@ -1,6 +1,6 @@
 """The artifact containment scan: the built wheel and sdist carry only Users-zone bytes.
 
-The rule (the MVP ruling, EVOLUCEAN-0555, AHA-0029): what leaves the
+The rule (the MVP ruling, AHA-0029): what leaves the
 repository through the package channel may carry nothing below zone 1
 (Users) - the scan runs over the exact built artifacts, not a
 reconstruction, with three arms. **Allowlist**: every artifact member is

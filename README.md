@@ -5,10 +5,10 @@ services every door needs, and the doors themselves - the `ahabase` CLI
 now, an MCP server and a Claude Code plugin next - over one registry that
 plugins fill.
 
-> **The source repository is private until the first release.** The
-> package on its channel is the public face; the repository becomes
-> public only by the owner's decision, together with the first real
-> release.
+> **This repository is the public home of ahabase** (fresh start,
+> 2026-11-22; the development record before that date stays in the
+> owner's private archive). The package is heading to PyPI; until the
+> first real release the channel lines below point at the dry-run.
 
 ## Install (consumers)
 
