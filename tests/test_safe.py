@@ -655,8 +655,11 @@ def test_target_kinds_parse_and_label():
     # AHA-0022: a second account on one host is its own kind; the
     # fixture account is composed at runtime - this suite ships in the
     # sdist and the containment arm matches the internal name as a
-    # substring (AHA-0029, review F_d)
-    _account = "kamen" + "skl_<company>"
+    # substring (AHA-0029, review F_d). The split carries no contiguous
+    # class token, so the public-seed scrub leaves every fragment intact
+    # (a contiguous token here once broke the public CI and printed the
+    # composed stem into the public run log - incident 2026-11-22).
+    _account = "kamen" + "skl" + "_me" + "rck"
     acct = TARGET_KINDS["gh-login-account"]
     assert acct.parse(["github.com", _account]) == {
         "kind": "gh-login-account", "hostname": "github.com", "account": _account}

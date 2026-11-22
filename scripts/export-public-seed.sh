@@ -29,7 +29,14 @@ MIRROR_THRESHOLD=${MIRROR_THRESHOLD:-100}
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 if [ -d "$SRC" ]; then
-  (cd "$SRC" && tar -cf - --exclude .git .) | tar -xf - -C "$WORK"
+  if [ -d "$SRC/.git" ] || git -C "$SRC" rev-parse --git-dir >/dev/null 2>&1; then
+    # a git tree exports TRACKED CONTENT ONLY - untracked files (editor
+    # state, drafts, __pycache__) never ride the seed (incident 2026-11-22:
+    # five untracked files shipped to the public repository)
+    (cd "$SRC" && git archive HEAD) | tar -x -C "$WORK"
+  else
+    (cd "$SRC" && tar -cf - --exclude .git .) | tar -xf - -C "$WORK"
+  fi
 else
   git archive "$SRC" | tar -x -C "$WORK"
 fi
