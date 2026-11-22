@@ -34,10 +34,13 @@ only: there are no literals to scrub there). The AHA-0029 test rows already
 held the package source (`src/`, `tests/`, README) to account-string absence;
 this pass extends the guarantee to the story documents and the story history.
 
-## Pending (review round 1, for the Human)
+## Commit metadata (accepted non-goal, Human ruling 2026-11-22)
 
-- commit-metadata: the seed's two commits currently carry the maintainer's
-  real name and address as author and committer; a public flip would publish
-  them permanently. Decision open: neutral no-reply authorship for the seed
-  and handover pushes, or an explicitly recorded accepted non-goal. The
-  chosen outcome becomes a measured line here and a suite row at the flip.
+- commit-metadata: the maintainer identity (real name and personal address)
+  stays in the seed and handover commits as author and committer - an
+  explicitly accepted non-goal ("that is how open source works: the author
+  is visible; my personal address is fine", Human, 2026-11-22). Measured at
+  the ruling: the seed history carries exactly 1 distinct author identity
+  and 1 distinct committer identity; the R3 suite row pins exactly-one at
+  the flip, so no OTHER identity (a corporate account, a stray machine) can
+  ever ride the public history unnoticed.

@@ -22,8 +22,8 @@ tests:
     expect:
       exit_code: 0
   - name: R3_flip_and_renames
-    description: the private archive keeps the releases and the canonical repository has fresh-root history
-    command: test "$(gh repo view ahabase/ahabase-private --json visibility --jq .visibility)" = "private" && gh release list -R ahabase/ahabase-private --limit 200 | grep -q v0.0033 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '.[-1].commit.committer.date' | cut -c1-10)" \> 2026-11-21
+    description: the private archive keeps the releases and the canonical repository has fresh-root history carrying exactly one author and one committer identity (the maintainer's - the accepted non-goal; a second identity would be a leak)
+    command: test "$(gh repo view ahabase/ahabase-private --json visibility --jq .visibility)" = "private" && gh release list -R ahabase/ahabase-private --limit 200 | grep -q v0.0033 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '.[-1].commit.committer.date' | cut -c1-10)" \> 2026-11-21 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '[.[].commit.author.email] | unique | length')" -eq 1 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '[.[].commit.committer.email] | unique | length')" -eq 1
     expect:
       exit_code: 0
   - name: R4_workspace_on_public_history
