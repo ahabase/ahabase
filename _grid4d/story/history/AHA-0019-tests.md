@@ -121,8 +121,8 @@ tests:
     description: "the tutorial names no real identifier - grep over the workspace's personal, epic and registry names comes back empty"
     command: |
       f=docs/safe.md
-      if grep -riEq '<work-user>|lubomir|<enterprise-project>|mang|<enterprise-tool>|evolucean|ahabase/|<account-id>' "$f"; then
-        grep -riEn '<work-user>|lubomir|<enterprise-project>|mang|<enterprise-tool>|evolucean|ahabase/|<account-id>' "$f"
+      if grep -riEq '<work-user>|<user-stem>|<enterprise-project>|mang|<enterprise-tool>|evolucean|ahabase/|<account-id>' "$f"; then
+        grep -riEn '<work-user>|<user-stem>|<enterprise-project>|mang|<enterprise-tool>|evolucean|ahabase/|<account-id>' "$f"
         echo PERIMETER_LEAK; exit 1
       fi
       echo R3_PERIMETER_OK

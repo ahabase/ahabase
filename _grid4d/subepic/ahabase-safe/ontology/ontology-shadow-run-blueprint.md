@@ -32,7 +32,7 @@
 
 ## Example
 
-- `ahabase safe compare <enterprise-tool>-api --env TIMBR_API_KEY` answers `same`; one read-only tool command runs normally and through `safe run` with equal results
+- `ahabase safe compare <enterprise-tool>-api --env <enterprise-tool>_API_KEY` answers `same`; one read-only tool command runs normally and through `safe run` with equal results
 
 ## Related
 

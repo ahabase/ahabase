@@ -11,6 +11,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# AHA-0034 round 1: a push and its PR run on one ref no longer double-spend
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   suite:
     strategy:

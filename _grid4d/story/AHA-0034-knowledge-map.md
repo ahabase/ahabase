@@ -11,3 +11,4 @@
 - [AHA-0034](AHA-0034) (Entry)
 - [AHA-0034-knowledge-map](AHA-0034-knowledge-map) (Entry)
 - [AHA-0034-tests](AHA-0034-tests) (Check)
+- [AHA-0034-scrub-report](AHA-0034-scrub-report) (Entry)
