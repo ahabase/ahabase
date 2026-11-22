@@ -14,6 +14,7 @@ rows measure the door, not the machine.
 
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +26,22 @@ import ahabase.wiki.publish as publish_module
 from ahabase.cli_wiki import wiki_group
 
 ACCOUNT = "fixture-acct"
+
+# The real probe, captured at import - before any fixture pins it at the
+# seam (round-1 finding 1 held green because every end-to-end row pinned
+# the probe; these rows drive the real one).
+_REAL_PROBE = publish_module.account_of_safe_login
+
+
+def _stub_gh(tmp_path: Path, body: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Put a stub gh on PATH ahead of everything - the probe's which()
+    finds it, the door runs unmeasured by the machine's gh."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    gh = bin_dir / "gh"
+    gh.write_text(body)
+    gh.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
 
 
 def _git(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
@@ -180,3 +197,64 @@ def test_account_probe_fails_closed_without_gh(
     monkeypatch.setattr(shutil, "which", lambda name: None)
     with pytest.raises(publish_module.WikiRefusal, match="gh is not on PATH"):
         publish_module.account_of_safe_login()
+
+
+def test_probe_returns_the_login_both_polarities(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Round-1 finding 1 (seats c020eeb4 and b39ec132, independently):
+    the real probe's success polarity - a gh on PATH that prints the
+    login must RETURN it (the function fell off the end and returned
+    None, so the gate refused every real run); the failure polarity: a
+    non-zero gh refuses with the remedy. No fx: the real function."""
+    _stub_gh(tmp_path, "#!/bin/sh\nprintf 'acct-one\\n'\n", monkeypatch)
+    monkeypatch.setenv("GH_TOKEN", "ambient-token")  # scrubbed, never a fallback
+    assert _REAL_PROBE() == "acct-one"
+
+    _stub_gh(tmp_path, "#!/bin/sh\necho 'bad credentials' >&2\nexit 1\n",
+             monkeypatch)
+    with pytest.raises(publish_module.WikiRefusal, match="gh api user failed"):
+        _REAL_PROBE()
+
+
+def test_publish_end_to_end_with_the_real_probe(
+        fx: PublishFixture, tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    """Round-1 finding 1's coverage gap: every end-to-end row pinned the
+    probe at its seam, so the dead probe stayed green. This row releases
+    the pin - a stub gh on PATH answers the identity gate for real, the
+    gate compares it with the declaration, and the door publishes end
+    to end. Only the remote is fixture-local; the probe is the real one."""
+    _stub_gh(tmp_path, f"#!/bin/sh\nprintf '{ACCOUNT}\\n'\n", monkeypatch)
+    monkeypatch.setattr(publish_module, "account_of_safe_login", _REAL_PROBE)
+    assert _run("sync", "--epic", "fixepic").exit_code == 0
+    published = _run("publish", "--epic", "fixepic")
+    assert published.exit_code == 0, published.output
+    assert _commits(fx.bare) == 1
+
+
+def test_push_child_never_sees_ambient_tokens(
+        fx: PublishFixture, tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    """Round-1 finding 2 (seats c020eeb4 and b39ec132, independently):
+    the gate scrubs the ambient token variables from the probe's child,
+    but the push-path git children inherited them - a credential helper
+    preferring GH_TOKEN could push as the ambient token's account while
+    the gate had verified the safe's. Witness: a pre-push hook installed
+    through GIT_TEMPLATE_DIR at the mirror's init dumps its environment;
+    the ambient token variable must not be in it."""
+    template = tmp_path / "tpl"
+    (template / "hooks").mkdir(parents=True)
+    witness = tmp_path / "hook-env.txt"
+    hook = template / "hooks" / "pre-push"
+    hook.write_text(f"#!/bin/sh\nenv > {witness}\nexit 0\n")
+    hook.chmod(0o755)
+    monkeypatch.setenv("GIT_TEMPLATE_DIR", str(template))
+    monkeypatch.setenv("GH_TOKEN", "ambient-token")
+
+    assert _run("sync", "--epic", "fixepic").exit_code == 0
+    published = _run("publish", "--epic", "fixepic")
+    assert published.exit_code == 0, published.output
+    assert _commits(fx.bare) == 1  # the push happened - through the hook
+    env_seen = witness.read_text()
+    assert "GH_TOKEN" not in env_seen  # the child never saw the variable
+    assert "ambient-token" not in env_seen  # nor its value

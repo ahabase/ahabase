@@ -28,3 +28,7 @@ Positive control measured: pointing a pinned clone at the quarantine repository 
 1. `epic init` writes `ahabase.remotePin` and installs the guard with the hook payload
 2. `knowledge-usage doctor` reports clones whose origin URL diverges from their pin (the rename detector)
 3. the rename runbook step: repin every clone and worktree of a renamed repository BEFORE any git operation anywhere in it
+
+## The wiki mirror leg (AHA-0036 round-1 review, 2026-11-22)
+
+Both review seats observed (not a finding, recorded here): the wiki door's `wiki_remote` derives `<repo>.wiki.git` from the epic repository's `origin` URL - the very derivation this issue names as stale after a rename - and honors no `ahabase.remotePin`. A stale origin would publish the mirror to whichever repository owns the old name's wiki. Worse, the guard itself cannot catch it: the mirror becomes a fresh `git init` + `remote add` inside `publish`, carrying none of the epic tree's local config, so no pin exists in the mirror to compare against. The fix line for the integration story: publish refuses when the derived wiki remote's repo suffix diverges from the epic tree's pin (the pin read from the epic tree, not the mirror), with the repin remedy printed.

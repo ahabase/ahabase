@@ -44,13 +44,24 @@ _ENV_TOKEN_KEYS = ("GH_TOKEN", "GITHUB_TOKEN",
 _GIT_TIMEOUT = 60
 
 
+def _scrubbed_env() -> dict[str, str]:
+    """The child environment without the ambient token variables: the
+    account the identity gate verified is the only token source - a
+    credential helper preferring GH_TOKEN (gh's does) would otherwise
+    let the push ride whichever account the ambient token belongs to."""
+    return {k: v for k, v in os.environ.items() if k not in _ENV_TOKEN_KEYS}
+
+
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    """Run git in the mirror; a missing git is a refusal, never a crash."""
+    """Run git in the mirror with the ambient token variables scrubbed
+    (the gate's verified account is the only token source); a missing
+    git is a refusal, never a crash."""
     if shutil.which("git") is None:
         raise WikiRefusal("git is not on PATH - install git first")
     try:
         return subprocess.run(["git", *args], cwd=cwd, capture_output=True,
-                              text=True, timeout=_GIT_TIMEOUT)
+                              text=True, timeout=_GIT_TIMEOUT,
+                              env=_scrubbed_env())
     except subprocess.TimeoutExpired:
         raise WikiRefusal(f"git {args[0]} timed out after {_GIT_TIMEOUT}s "
                           "in the mirror") from None
@@ -69,11 +80,10 @@ def account_of_safe_login(timeout: int = 30) -> str:
         raise WikiRefusal("gh is not on PATH - install the GitHub CLI "
                           "first (the publish door probes the account "
                           "through the safe's gh login)")
-    env = {k: v for k, v in os.environ.items() if k not in _ENV_TOKEN_KEYS}
     try:
         result = subprocess.run([gh, "api", "user", "--jq", ".login"],
                                 capture_output=True, text=True,
-                                timeout=timeout, env=env)
+                                timeout=timeout, env=_scrubbed_env())
     except subprocess.TimeoutExpired:
         raise WikiRefusal(f"gh api user timed out after {timeout}s - the "
                           "account probe cannot confirm the login") from None
@@ -84,6 +94,7 @@ def account_of_safe_login(timeout: int = 30) -> str:
         raise WikiRefusal(f"gh api user failed: {detail} - the login is the "
                           "safe's gh-login target; its owner refreshes it "
                           "(ahabase safe refresh <name>)")
+    return value
 
 
 def declared_account(epic_root: Path) -> str:
@@ -148,7 +159,8 @@ def mirror_status(wiki_path: Path, timeout: int = 5) -> dict:
     try:
         result = subprocess.run(["git", "status", "--porcelain"],
                                 cwd=wiki_path, capture_output=True,
-                                text=True, timeout=timeout)
+                                text=True, timeout=timeout,
+                                env=_scrubbed_env())
         lines = [line for line in result.stdout.strip().split("\n") if line]
         return {"clean": len(lines) == 0, "uncommitted_count": len(lines),
                 "files": lines[:5]}
