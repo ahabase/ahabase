@@ -128,16 +128,30 @@ def _worktrees_dir(epic: Epic) -> Path:
     return get_workspace_dir() / "_worktrees" / epic.root.name
 
 
+def _worktree_paths(epic: Epic) -> list[Path]:
+    """Every live worktree of the repository, wherever it sits - git's own
+    authoritative list, never a path convention: the workspace shelf, a
+    legacy in-repo ``_worktrees/`` layout, a hand-made location all appear
+    (AHA-0035 review round 1: a convention-only scan let the next mint
+    silently reuse a live old-layout story's ID). The main tree itself is
+    excluded - its story folders are read directly."""
+    paths: list[Path] = []
+    for line in _git(epic.root, "worktree", "list", "--porcelain").splitlines():
+        if line.startswith("worktree "):
+            path = Path(line[len("worktree "):])
+            if path != epic.root:
+                paths.append(path)
+    return sorted(paths)
+
+
 def _story_dirs(epic: Epic) -> list[Path]:
     """Every folder the numbering scan reads: the story folders of the main
-    tree (with history) and of each live worktree."""
+    tree (with history) and of each live worktree, wherever that worktree
+    sits (the authoritative worktree list)."""
     dirs = [epic.grid / "story", epic.grid / "story" / "history"]
-    worktrees = _worktrees_dir(epic)
-    if worktrees.is_dir():
-        for worktree in sorted(worktrees.iterdir()):
-            if worktree.is_dir():
-                dirs += [worktree / "_grid4d" / "story",
-                         worktree / "_grid4d" / "story" / "history"]
+    for worktree in _worktree_paths(epic):
+        dirs += [worktree / "_grid4d" / "story",
+                 worktree / "_grid4d" / "story" / "history"]
     return [d for d in dirs if d.is_dir()]
 
 
@@ -217,7 +231,7 @@ def _is_corpse(corpse: Path, story: str, held: str) -> bool:
 
 
 def _heal_half_minted(epic: Epic, branch: str) -> list[str]:
-    """Remove every half-minted corpse under ``_worktrees/``: a
+    """Remove every half-minted corpse (wherever its worktree sits): a
     story-named worktree whose branch holds no commit beyond the main
     branch AND whose shape is exactly a killed mint (creation-only
     reflog, dirt limited to the mint's own files - the aftermath of a
@@ -229,11 +243,8 @@ def _heal_half_minted(epic: Epic, branch: str) -> list[str]:
     mint's worktree passes through the same state, but never outside
     the lock. Returns the healed names."""
     pattern = re.compile(rf"^{re.escape(epic.story_prefix)}-\d+$")
-    worktrees = _worktrees_dir(epic)
     healed: list[str] = []
-    if not worktrees.is_dir():
-        return healed
-    for candidate in sorted(worktrees.iterdir()):
+    for candidate in _worktree_paths(epic):
         if not (candidate.is_dir() and pattern.match(candidate.name)
                 and (candidate / ".git").exists()):
             continue
@@ -320,16 +331,26 @@ def _status_of(path: Path) -> str:
 
 def status(epic: Epic) -> list[str]:
     """What is: the active story, the open stories, the completed count."""
-    root = epic.root
-    worktree_stories: list[str] = []
+    worktree_stories: list[tuple[str, str]] = []
     open_stories: list[str] = []
-    worktrees = _worktrees_dir(epic)
-    if worktrees.is_dir():
-        for worktree in sorted(worktrees.iterdir()):
-            doc = worktree / "_grid4d" / "story" / f"{worktree.name}.md"
-            if doc.is_file() and _status_of(doc) != "completed":
-                worktree_stories.append(worktree.name)
-                open_stories.append(f"{worktree.name} (worktree, {_status_of(doc) or 'no Status line'})")
+
+    def _where(worktree: Path) -> str:
+        """The worktree's readable location: workspace-relative when it sits
+        in the shelf, repo-relative when it sits inside the repository (the
+        legacy layout shows itself as in-repo), the absolute path only when
+        it sits outside both."""
+        for base in (get_workspace_dir(), epic.root):
+            try:
+                return str(worktree.relative_to(base))
+            except ValueError:
+                continue
+        return str(worktree)
+
+    for worktree in _worktree_paths(epic):
+        doc = worktree / "_grid4d" / "story" / f"{worktree.name}.md"
+        if doc.is_file() and _status_of(doc) != "completed":
+            worktree_stories.append((worktree.name, _where(worktree)))
+            open_stories.append(f"{worktree.name} (worktree, {_status_of(doc) or 'no Status line'})")
     story_doc = re.compile(rf"^{re.escape(epic.story_prefix)}-(\d+)\.md$")
     completed: set[str] = set()
     for doc in sorted((epic.grid / "story").iterdir()):
@@ -344,8 +365,8 @@ def status(epic: Epic) -> list[str]:
         archived = re.compile(rf"^{re.escape(epic.story_prefix)}-(\d+)")
         completed |= {archived.match(p.name).group(1) for p in history.glob("*.md")
                       if archived.match(p.name)}
-    active = (f"active: {worktree_stories[0]} "
-              f"(worktree _worktrees/{root.name}/{worktree_stories[0]})") \
+    active = (f"active: {worktree_stories[0][0]} "
+              f"(worktree {worktree_stories[0][1]})") \
         if worktree_stories else "active: none"
     return [active, f"open: {', '.join(open_stories) if open_stories else 'none'}",
             f"completed: {len(completed)}"]

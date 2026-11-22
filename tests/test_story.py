@@ -130,6 +130,43 @@ def test_status_reports_active_open_and_completed(repo: Path) -> None:
     assert lines[2] == "completed: 2"
 
 
+def test_legacy_in_repo_worktree_still_counts(repo: Path) -> None:
+    """The old layout never silently frees its numbers: a live in-repo
+    ``_worktrees/DEMO-0002`` - exactly the state the retired injection left
+    behind (worktree, branch, story doc, the ignore line committed) - is
+    read by the scan wherever it sits, so the next mint takes 0003 and
+    never reuses the live story's ID (AHA-0035 review round 1, finding 1).
+    The status line names the legacy worktree's real location, in-repo."""
+    (repo / ".gitignore").write_text("_worktrees/\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "chore: the retired injection's ignore line")
+    legacy = repo / "_worktrees" / "DEMO-0002"
+    _git(repo, "worktree", "add", "-q", "-b", "feature/DEMO-0002-old",
+         str(legacy), "main")
+    _write(legacy / "_grid4d/story/DEMO-0002.md",
+           "# DEMO-0002: the old layout\n\n> none\n\n"
+           "**Type:** default\n**Epic:** [DEMO](DEMO)\n**Status:** in_progress\n\n"
+           "## Goal\n\nnone\n\n## Requirements\n\n### R1: none\n\n"
+           "**Acceptance Criterion:** none\n\n## Acceptance Criteria\n\n"
+           "- [ ] R1: none\n\n## Notes\n\nnone\n\n## References\n\n- [DEMO](DEMO)\n")
+    _git(legacy, "add", "-A")
+    _git(legacy, "commit", "-q", "-m", "DEMO-0002(docs): the legacy story doc")
+    # the numbering reads the legacy story, never reuses a live ID
+    assert story.next_number(load(repo)) == 3
+    lines = story.status(load(repo))
+    # the location shows workspace-relative - the legacy worktree's real
+    # place, in-repo, visible as such (repos sit under the workspace)
+    assert lines[0] == "active: DEMO-0002 (worktree demo/_worktrees/DEMO-0002)"
+    assert lines[1] == "open: DEMO-0002 (worktree, in_progress)"
+    # the mint lands at the workspace shelf and the legacy story survives it
+    minted = story.create(load(repo), "after the legacy story")
+    assert minted == repo.parent / "_worktrees" / repo.name / "DEMO-0003"
+    assert (legacy / "_grid4d" / "story" / "DEMO-0002.md").is_file()
+    listed = subprocess.run(["git", "worktree", "list"], cwd=repo,
+                            capture_output=True, text=True).stdout
+    assert str(legacy) in listed
+
+
 def test_complete_tags_merges_and_keeps_the_set_in_window(repo: Path) -> None:
     """The R2 end-to-end: create, one document edit, complete. The default
     window holds the completed set in story/ (nothing archived yet) - the
