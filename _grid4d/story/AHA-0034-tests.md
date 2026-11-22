@@ -13,7 +13,7 @@ pipefail: true
 tests:
   - name: R1_canonical_public_linux_ci
     description: the canonical repository is public and macOS runners appear only inside the conditional tags/dispatch matrix arm (the push path is ubuntu-only)
-    command: test "$(gh repo view ahabase/ahabase --json visibility --jq .visibility)" = "public" && grep -q "ubuntu-latest" .github/workflows/tests.yml && n=$(grep -c "macos-latest" .github/workflows/tests.yml || true) && g=$(grep "macos-latest" .github/workflows/tests.yml | grep "workflow_dispatch" | grep -c "refs/tags/" || true) && test "$n" -ge 1 && test "$n" -eq "$g"
+    command: test "$(gh repo view ahabase/ahabase --json isPrivate --jq .isPrivate)" = "false" && grep -q "ubuntu-latest" .github/workflows/tests.yml && n=$(grep -c "macos-latest" .github/workflows/tests.yml || true) && g=$(grep "macos-latest" .github/workflows/tests.yml | grep "workflow_dispatch" | grep -c "refs/tags/" || true) && test "$n" -ge 1 && test "$n" -eq "$g"
     expect:
       exit_code: 0
   - name: R2_scrub_report_zero_matches
@@ -23,12 +23,12 @@ tests:
       exit_code: 0
   - name: R3_flip_and_renames
     description: the private archive keeps the releases and the canonical repository has fresh-root history carrying exactly one author and one committer identity (the maintainer's - the accepted non-goal; a second identity would be a leak)
-    command: test "$(gh repo view ahabase/ahabase-private --json visibility --jq .visibility)" = "private" && gh release list -R ahabase/ahabase-private --limit 200 | grep -q v0.0033 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '.[-1].commit.committer.date' | cut -c1-10)" \> 2026-11-21 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '[.[].commit.author.email] | unique | length')" -eq 1 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '[.[].commit.committer.email] | unique | length')" -eq 1
+    command: test "$(gh repo view ahabase/ahabase-private --json isPrivate --jq .isPrivate)" = "true" && gh release list -R ahabase/ahabase-private --limit 200 | grep v0.0033 >/dev/null && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '.[-1].commit.committer.date' | cut -c1-10)" \> 2026-11-21 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '[.[].commit.author.email] | unique | length')" -eq 1 && test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq '[.[].commit.committer.email] | unique | length')" -eq 1
     expect:
       exit_code: 0
   - name: R4_workspace_on_public_history
-    description: the canonical repository holds the fresh-root history (fewer than 100 commits) and its public ledger holds this story; the local rewiring of the workspace epic tree is recorded measured in the story Notes at handover
-    command: test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq 'length')" -lt 100 && gh api repos/ahabase/ahabase/contents/_grid4d/story --jq '.[].name' | grep -q AHA-0034.md
+    description: the canonical repository holds the fresh-root history (fewer than 100 commits) and its public ledger holds this story; the local rewiring of the workspace epic tree is recorded measured in the story Notes at handover; gh legs read at the stamp, before the completion parity push moves the story document to history
+    command: test "$(gh api 'repos/ahabase/ahabase/commits?per_page=100' --jq 'length')" -lt 100 && gh api repos/ahabase/ahabase/contents/_grid4d/story --jq '.[].name' | grep AHA-0034.md >/dev/null
     expect:
       exit_code: 0
   - name: R5_continuity_guarantees
@@ -42,12 +42,13 @@ tests:
 
 | Test | Result | Date |
 |------|--------|------|
-| R1_canonical_public_linux_ci | ⚪ | |
-| R2_scrub_report_zero_matches | ⚪ | |
-| R3_flip_and_renames | ⚪ | |
-| R4_workspace_on_public_history | ⚪ | |
-| R5_continuity_guarantees | ⚪ | |
+| R1_canonical_public_linux_ci | ✅ | 2026-11-22 |
+| R2_scrub_report_zero_matches | ✅ | 2026-11-22 |
+| R3_flip_and_renames | ✅ | 2026-11-22 |
+| R4_workspace_on_public_history | ✅ | 2026-11-22 |
+| R5_continuity_guarantees | ✅ | 2026-11-22 |
 
+Run at 186c966b216e20ff4e7123bc18d37776eb06e49b
 ## Related
 
 - [AHA-0034](AHA-0034) - Parent story
