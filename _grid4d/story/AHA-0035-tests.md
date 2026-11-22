@@ -47,12 +47,14 @@ tests:
 
 | Test | Result | Date |
 |------|--------|------|
-| R1_engine_suites_workspace_worktrees | ⚪ | |
-| R1_consumer_leg_wheel_mint | ⚪ | |
-| R2_standard_folders_census | ⚪ | |
-| R3_playground_no_inrepo_paths | ⚪ | |
-| R3_playground_suite_fresh_workspace | ⚪ | |
-| R4_cold_ci_built_export | ⚪ | |
+| R1_engine_suites_workspace_worktrees | ✅ | 2026-11-22 |
+| R1_consumer_leg_wheel_mint | ✅ | 2026-11-22 |
+| R2_standard_folders_census | ✅ | 2026-11-22 |
+| R3_playground_no_inrepo_paths | ✅ | 2026-11-22 |
+| R3_playground_suite_fresh_workspace | ✅ | 2026-11-22 |
+| R4_cold_ci_built_export | ✅ | 2026-11-22 |
+
+Run at 4d53fd084be48fbaf7e0e57902ba4c223bd1c956
 
 ## Related
 
