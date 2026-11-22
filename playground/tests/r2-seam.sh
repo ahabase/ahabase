@@ -56,8 +56,10 @@ git rev-parse --verify --quiet main >/dev/null || MAIN_ABSENT=1
 
 "$AHABASE" story create "carry code on the declared branch" --root . \
     || fail "story create refused the messy repo"
-WORKTREE="$WS/repos/messy/_worktrees/MESSY-0001"
-[ -d "$WORKTREE" ] || fail "no minted worktree"
+WORKTREE="$WS/_worktrees/messy/MESSY-0001"
+[ -d "$WORKTREE" ] || fail "no minted worktree at the workspace root (AHA-0035)"
+[ ! -e "$WS/repos/messy/_worktrees" ] \
+    || fail "an in-repo _worktrees survived the mint (AHA-0035)"
 perl -pi -e 's/\{GOAL\}/carry the code on the declared branch/' "$WORKTREE/_grid4d/story/MESSY-0001.md"
 git -C "$WORKTREE" add -A
 git -C "$WORKTREE" $GITUSER commit -q -m "MESSY-0001(docs): the one edit"
@@ -87,7 +89,7 @@ cd "$WS/repos/scratch"
 perl -pi -e 's/\{OVERVIEW\}/a scratch consumer repository/' _grid4d/story/SCRATCH.md
 git add -A && git $GITUSER commit -q -m "chore: shape the scratch Epic"
 "$AHABASE" story create "no branch declared" --root . || fail "story create refused the scratch repo"
-CTRL="$WS/repos/scratch/_worktrees/SCRATCH-0001"
+CTRL="$WS/_worktrees/scratch/SCRATCH-0001"
 perl -pi -e 's/\{GOAL\}/land on the default branch/' "$CTRL/_grid4d/story/SCRATCH-0001.md"
 git -C "$CTRL" add -A && git -C "$CTRL" $GITUSER commit -q -m "SCRATCH-0001(docs): the one edit"
 "$AHABASE" story complete SCRATCH-0001 --root . || fail "the control complete refused"

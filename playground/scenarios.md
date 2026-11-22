@@ -36,8 +36,8 @@ overview placeholder, commit, then:
 ```sh
 ../../.venv/bin/ahabase validate --root .          # grid4d: holds
 ../../.venv/bin/ahabase story create "carry code on the declared branch" --root .
-cd _worktrees/MESSY-0001 && edit + git add -A + git commit
-cd ../..                                           # the main tree, on trunk
+cd ../../_worktrees/messy/MESSY-0001 && edit + git add -A + git commit
+cd ../../../repos/messy                            # the main tree, on trunk
 ../../.venv/bin/ahabase story complete MESSY-0001 --root .
 ```
 
@@ -59,9 +59,9 @@ Declare the window in `_grid4d/story/SCRATCH.md`: `**StoryHistoryKeep:** 1`
 
 ```sh
 ../../.venv/bin/ahabase story create "describe the request" --root .
-cd _worktrees/SCRATCH-000N
+cd ../../_worktrees/scratch/SCRATCH-000N   # the worktree home is workspace-level
 # fill {GOAL} in the story document, fill the tests definition, commit
-cd ../..
+cd ../../../repos/scratch
 ../../.venv/bin/ahabase story status --root .
 ../../.venv/bin/ahabase story complete SCRATCH-000N --root .
 ```
@@ -104,7 +104,10 @@ commit), re-run `complete`: exactly one merge commit and one tag result.
 
 This playground writes **nothing** into `~/ahabase` (the development
 workspace): no `_data/`, no `_config/`, no sessions. The pin in `ahabase.env`
-is what holds that - source it first, every time.
+is what holds that - source it first, every time. The playground's own
+workspace carries the seven standard folders at its root (created by the
+bootstrap's `ahabase workspace ensure`); the story worktrees mint under
+`_worktrees/<repo>/<STORY>/` there - never inside an Epic repository.
 
 ## The comparison lens: measuring what the consumer lacks
 

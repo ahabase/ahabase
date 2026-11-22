@@ -29,6 +29,7 @@ sh "$BOOTSTRAP" "$WS" >/dev/null || fail "the bootstrap did not run green"
 . "$WS/ahabase.env"
 AHABASE="$WS/.venv/bin/ahabase"
 REPO="$WS/repos/scratch"
+WTS="$WS/_worktrees/scratch"  # the workspace-level worktree home (AHA-0035)
 cd "$REPO"
 git rev-parse --verify HEAD >/dev/null 2>&1 && fail "the scratch fixture is not empty"
 "$AHABASE" init SCRATCH --root . || fail "init refused the empty scratch repo"
@@ -41,7 +42,7 @@ cycle() {  # cycle NUMBER EDIT: create, one committed edit, status, complete
     NUMBER="$1"; EDIT="$2"
     note "cycle SCRATCH-$NUMBER"
     "$AHABASE" story create "story $NUMBER" --root . || fail "story create refused SCRATCH-$NUMBER"
-    WT="_worktrees/SCRATCH-$NUMBER"
+    WT="$WTS/SCRATCH-$NUMBER"
     (
         cd "$WT"
         eval "$EDIT"
@@ -80,7 +81,7 @@ note "archetype 3 gate: two completions under keep 1 -> the oldest archived"
 # --- archetype 4: the conflicted merge --------------------------------------------
 note "archetype 4: a real conflict - the same def-file line on both sides"
 "$AHABASE" story create "the conflicted story" --root . || fail "story create refused the conflict story"
-WT="_worktrees/SCRATCH-0003"
+WT="$WTS/SCRATCH-0003"
 perl -pi -e 's/\{GOAL\}/the conflicted goal/' "$WT/_grid4d/story/SCRATCH-0003.md"
 perl -pi -e 's/a scratch consumer Epic/the story-side def edit/' "$WT/_grid4d/story/SCRATCH.md"
 git -C "$WT" add -A && git -C "$WT" commit -q -m "SCRATCH-0003(docs): the story-side edits"
@@ -129,7 +130,7 @@ fi
 grep -q "uncommitted changes" "$SANDBOX/ref-out.txt" \
     || fail "the dirty-tree refusal does not name its reason"
 [ -z "$(git tag -l vSCRATCH-0004)" ] || fail "the dirty-tree refusal minted a tag"
-[ ! -d _worktrees/SCRATCH-0004 ] || fail "the dirty-tree refusal minted a worktree"
+[ ! -d "$WTS/SCRATCH-0004" ] || fail "the dirty-tree refusal minted a worktree"
 if git branch --list "feature/SCRATCH-0004*" | grep .; then
     fail "the dirty-tree refusal minted a branch"
 fi
@@ -137,9 +138,9 @@ rm dirt.txt
 
 note "archetype 5b: root on another branch at complete"
 "$AHABASE" story create "the misrooted story" --root . || fail "story create refused a clean tree"
-perl -pi -e 's/\{GOAL\}/the misrooted goal/' _worktrees/SCRATCH-0004/_grid4d/story/SCRATCH-0004.md
-git -C _worktrees/SCRATCH-0004 add -A
-git -C _worktrees/SCRATCH-0004 commit -q -m "SCRATCH-0004(docs): the one edit"
+perl -pi -e 's/\{GOAL\}/the misrooted goal/' "$WTS/SCRATCH-0004/_grid4d/story/SCRATCH-0004.md"
+git -C "$WTS/SCRATCH-0004" add -A
+git -C "$WTS/SCRATCH-0004" commit -q -m "SCRATCH-0004(docs): the one edit"
 git checkout -q -b elsewhere
 if "$AHABASE" story complete SCRATCH-0004 --root . >"$SANDBOX/ref-out.txt" 2>&1; then
     fail "story complete accepted a root on another branch"
@@ -149,29 +150,29 @@ grep -q "the root is on 'elsewhere', not the main branch 'main'" "$SANDBOX/ref-o
 grep -q "checkout main before completing" "$SANDBOX/ref-out.txt" \
     || fail "the misrooted refusal does not name the recovery"
 [ -z "$(git tag -l vSCRATCH-0004)" ] || fail "the misrooted refusal minted a tag"
-grep -q "^\*\*Status:\*\* in_progress" _worktrees/SCRATCH-0004/_grid4d/story/SCRATCH-0004.md \
+grep -q "^\*\*Status:\*\* in_progress" "$WTS/SCRATCH-0004/_grid4d/story/SCRATCH-0004.md" \
     || fail "the misrooted refusal changed the story Status"
 git checkout -q main
-git worktree remove _worktrees/SCRATCH-0004
+git worktree remove "$WTS/SCRATCH-0004"
 git branch -D "feature/SCRATCH-0004-the-misrooted-story" >/dev/null
 
 note "archetype 5c: incomplete story set at complete"
 "$AHABASE" story create "the incomplete story" --root . || fail "story create refused a clean tree"
-rm _worktrees/SCRATCH-0004/_grid4d/story/SCRATCH-0004-tests.md
-git -C _worktrees/SCRATCH-0004 add -A
-git -C _worktrees/SCRATCH-0004 commit -q -m "SCRATCH-0004(chore): drop the tests file"
+rm "$WTS/SCRATCH-0004/_grid4d/story/SCRATCH-0004-tests.md"
+git -C "$WTS/SCRATCH-0004" add -A
+git -C "$WTS/SCRATCH-0004" commit -q -m "SCRATCH-0004(chore): drop the tests file"
 if "$AHABASE" story complete SCRATCH-0004 --root . >"$SANDBOX/ref-out.txt" 2>&1; then
     fail "story complete accepted an incomplete set"
 fi
 grep -q "the story set is incomplete: SCRATCH-0004-tests.md is missing" "$SANDBOX/ref-out.txt" \
     || fail "the incomplete-set refusal does not name the missing file"
 [ -z "$(git tag -l vSCRATCH-0004)" ] || fail "the incomplete-set refusal minted a tag"
-grep -q "^\*\*Status:\*\* in_progress" _worktrees/SCRATCH-0004/_grid4d/story/SCRATCH-0004.md \
+grep -q "^\*\*Status:\*\* in_progress" "$WTS/SCRATCH-0004/_grid4d/story/SCRATCH-0004.md" \
     || fail "the incomplete-set refusal changed the story Status"
 MERGES_AFTER="$(git log --merges --format=%H | wc -l | tr -d ' ')"
 [ "$MERGES_AFTER" = "$MERGES_BEFORE" ] \
     || fail "a refusal added a merge commit"
-git worktree remove --force _worktrees/SCRATCH-0004
+git worktree remove --force "$WTS/SCRATCH-0004"
 git branch -D "feature/SCRATCH-0004-the-incomplete-story" >/dev/null
 
 note "R3 GREEN: five archetypes through story create/status/complete alone"

@@ -19,7 +19,20 @@ scenarios.md     the request archetypes this playground walks through
 .venv/           ahabase serves from here (installed from the wheel)
 repos/scratch/   an empty git repository - the consumer's first touch
 repos/messy/     code, its own default branch (trunk), a v0.1 tag, a CI file
+_config/         per-epic settings files (<epic>-cli-settings.yml)
+_data/           engine state, per epic (<epic>/)
+_generated/      generated projections (the engine writes, the consumer reads)
+_inbox/          external inputs
+_temp/           scratch space
+_wikis/          local wiki copies (the wiki capability's home, to come)
+_worktrees/      story worktrees: <repo>/<STORY>/ - at the workspace root,
+                 outside every repository
 ```
+
+The seven `_`-prefixed folders are the engine's standard set: the bootstrap
+creates them through `ahabase workspace ensure` (idempotent - a deleted
+folder reappears on the next run), and no Epic repository ever carries any
+of them.
 
 ## The one rule above all: source the entrypoint first
 
@@ -45,14 +58,15 @@ cd repos/scratch
 ../.venv/bin/ahabase init SCRATCH --root .     # registers the Epic
 ../.venv/bin/ahabase validate --root .        # must hold
 ../.venv/bin/ahabase story create "the request" --root .
-# ... work in _worktrees/<STORY>/ (the story set lives there) ...
-cd .. && cd -   # return to the Epic's main tree, on the declared branch
+# ... work in ../../_worktrees/scratch/<STORY>/ (the story set lives there) ...
+cd ../../../repos/scratch   # return to the Epic's main tree, on the declared branch
 ../.venv/bin/ahabase story complete SCRATCH-0001 --root .
 ```
 
-- Stories live in worktrees (`_worktrees/<STORY>/`); `complete` runs from the
-  Epic's main tree, on the branch the def file declares (`**Branch:**`, else
-  git's default).
+- Stories live in worktrees at the **workspace root**
+  (`_worktrees/<repo>/<STORY>/`) - nothing worktree-shaped ever lands inside
+  an Epic repository; `complete` runs from the Epic's main tree, on the
+  branch the def file declares (`**Branch:**`, else git's default).
 - `complete` tags `v<STORY>`, merges `--no-ff`, archives beyond the declared
   history window (`**StoryHistoryKeep:**`), and removes the worktree.
 - Every refusal names its reason - read it, fix what it names, re-run.

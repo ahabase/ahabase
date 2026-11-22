@@ -68,6 +68,25 @@ fi
 
 # --- the scenarios document and the R2 fixtures --------------------------------
 [ -s "$WS/scenarios.md" ] || fail "no scenarios document in the workspace"
+
+# --- the seven standard folders (AHA-0035) ---------------------------------------
+# the census, both polarities: all seven at the workspace root (the
+# bootstrap's 'workspace ensure' act), none inside either fixture repo
+for FOLDER in _config _data _generated _inbox _temp _wikis _worktrees; do
+    [ -d "$WS/$FOLDER" ] || fail "no $FOLDER at the workspace root"
+done
+for REPO in scratch messy; do
+    for FOLDER in _config _data _generated _inbox _temp _wikis _worktrees; do
+        [ ! -e "$WS/repos/$REPO/$FOLDER" ] \
+            || fail "$FOLDER landed inside the $REPO repository"
+    done
+done
+# a deleted folder reappears on the next ensure (idempotent census act)
+rmdir "$WS/_temp"
+AHABASE_WORKSPACE="$WS" "$WS/.venv/bin/ahabase" workspace ensure >/dev/null \
+    || fail "workspace ensure refused on re-run"
+[ -d "$WS/_temp" ] || fail "the deleted _temp did not reappear on re-ensure"
+
 [ -d "$WS/repos/scratch/.git" ] || fail "no scratch repo"
 git -C "$WS/repos/scratch" rev-parse --verify HEAD >/dev/null 2>&1 \
     && fail "the scratch repo is not empty (HEAD resolves)"

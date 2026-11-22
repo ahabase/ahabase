@@ -84,9 +84,10 @@ CYCLE="$(
     cd "$REPO"
     NEXT="$("$AHABASE" story create "isolation witness" --root . 2>&1 | sed -n 's/^story: \(SCRATCH-[0-9]*\) minted.*/\1/p')"
     [ -n "$NEXT" ] || { echo "no story minted" >&2; exit 1; }
-    perl -pi -e "s/\\{GOAL\\}/the isolation witness/" "_worktrees/$NEXT/_grid4d/story/$NEXT.md"
-    git -C "_worktrees/$NEXT" add -A
-    git -C "_worktrees/$NEXT" commit -q -m "$NEXT(docs): the one edit"
+    WTN="$PLAYGROUND/_worktrees/scratch/$NEXT"  # the workspace home (AHA-0035)
+    perl -pi -e "s/\\{GOAL\\}/the isolation witness/" "$WTN/_grid4d/story/$NEXT.md"
+    git -C "$WTN" add -A
+    git -C "$WTN" commit -q -m "$NEXT(docs): the one edit"
     "$AHABASE" story complete "$NEXT" --root .
 )" || fail "the held-seam story cycle failed"
 

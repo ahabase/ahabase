@@ -5,7 +5,11 @@
 # repository's versioned material - the workspace CLAUDE.md template, the
 # scenarios document, the entrypoint pin - and installs ahabase into the
 # workspace's own venv from the BUILT WHEEL (never the checkout, the leg's
-# isolation lesson), witnessed by pip show. The two sample repositories of
+# isolation lesson), witnessed by pip show. The engine's own census act
+# ('ahabase workspace ensure') creates the seven standard folders at the
+# workspace root (AHA-0035: _config, _data, _generated, _inbox, _temp,
+# _wikis, _worktrees - outside every repository; the story worktrees mint
+# under _worktrees/<repo>/<STORY>). The two sample repositories of
 # R2 mint here as plain git fixtures: a scratch repo (empty - no commits,
 # no files; the consumer's first touch) and a messy one (code, its own
 # default branch trunk, a pre-existing v0.1 tag sharing no v<STORY> name,
@@ -61,6 +65,17 @@ AHABASE="$WORKSPACE/.venv/bin/ahabase"
 note "witness: which distribution serves the workspace"
 "$WORKSPACE/.venv/bin/pip" show ahabase | sed -n '1,3p'
 "$AHABASE" --version
+
+# --- the seven standard folders (AHA-0035) ---------------------------------
+# the engine's own census act, through the installed wheel: _config, _data,
+# _generated, _inbox, _temp, _wikis, _worktrees at the workspace root,
+# outside every repository
+note "the seven standard folders at the workspace root"
+AHABASE_WORKSPACE="$WORKSPACE" "$AHABASE" workspace ensure \
+    || fail "workspace ensure refused the fresh workspace"
+for FOLDER in _config _data _generated _inbox _temp _wikis _worktrees; do
+    [ -d "$WORKSPACE/$FOLDER" ] || fail "no $FOLDER at the workspace root"
+done
 
 cp "$HERE/CLAUDE.md" "$WORKSPACE/CLAUDE.md"
 cp "$HERE/scenarios.md" "$WORKSPACE/scenarios.md"

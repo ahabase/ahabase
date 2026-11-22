@@ -9,8 +9,9 @@
 
 Measured against the shelf: the development CLI (knowledge-usage, the
 development workspace's primary) exposes **61 top-level doors**; the ahabase
-CLI (this playground's primary, from the wheel) exposes **8** - `doctor`,
-`init`, `llm`, `ontology`, `safe`, `story`, `validate`, `verify`.
+CLI (this playground's primary, from the wheel) exposes **9** - `doctor`,
+`init`, `llm`, `ontology`, `safe`, `story`, `validate`, `verify`,
+`workspace` (re-walked 2026-11-22: AHA-0035 added the workspace door).
 
 ## The walk
 
@@ -100,7 +101,7 @@ fix is a package door, and this report is its evidence.
 
 ## The reverse direction: the ahabase side census (not gaps - but walked)
 
-The young package moves first, so its doors get walked too: a ninth door
+The young package moves first, so its doors get walked too: a tenth door
 here re-walks this report exactly like a new development door (the suite
 row enforces both sides).
 
@@ -114,6 +115,7 @@ row enforces both sides).
 | story | yes | covered | the lifecycle door (mint/show/complete) |
 | validate | in pieces (verify-file, verify-stdin) | folded | a top-level door in ahabase; the development tree carries the pieces as internals |
 | verify | yes | covered | the consistency door |
+| workspace | no (the folders exist, created by hand) | ahabase-born | the seven standard folders at the workspace root, created idempotently (AHA-0035); the development tree carries the folders but no door mints them |
 
 That is the intended direction - the young package is the entropy
 reduction over the development CLI, not a copy of it.
