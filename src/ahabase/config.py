@@ -94,6 +94,31 @@ def get_instance_root() -> Path:
     return get_workspace_dir()
 
 
+#: The seven standard folders every ahabase workspace carries at its root
+#: (the Human ruling 2026-11-22, AHA-0035 - the proven workspace topology):
+#: configuration, engine state, generated projections, external inputs,
+#: scratch space, wiki copies, story worktrees - outside every repository.
+STANDARD_FOLDERS = ("_config", "_data", "_generated", "_inbox", "_temp",
+                    "_wikis", "_worktrees")
+
+
+def ensure_standard_folders() -> list[Path]:
+    """The seven standard folders at the workspace root, created on demand.
+
+    Idempotent: a folder a consumer deleted reappears on the next call,
+    and an existing one is left exactly as it is (its contents are never
+    touched). The folders live at the workspace root only - no Epic
+    repository ever receives any of them (the story worktree home is
+    ``<workspace>/_worktrees/<repo>``, never inside the repository,
+    AHA-0035). Returns the seven, workspace-absolute.
+    """
+    workspace = get_workspace_dir()
+    folders = [workspace / name for name in STANDARD_FOLDERS]
+    for folder in folders:
+        folder.mkdir(parents=True, exist_ok=True)
+    return folders
+
+
 def get_machine_id() -> str:
     """A stable machine identifier: the hostname.
 

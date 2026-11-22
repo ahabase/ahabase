@@ -68,12 +68,14 @@ def _package_cli(get_registry) -> click.Group:
     from .cli_grid4d import init, validate
     from .cli_llm import llm
     from .cli_story import story_group
+    from .cli_workspace import workspace_group
     cli.add_command(init)
     cli.add_command(llm)
     cli.add_command(ontology)
     cli.add_command(story_group, name="story")
     cli.add_command(validate)
     cli.add_command(verify)
+    cli.add_command(workspace_group, name="workspace")
     return cli
 
 

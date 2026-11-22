@@ -3,9 +3,9 @@
 > The landed config/instance-state layer: the six-function library seam graduated from evolucean's CLI as the pilot graduation - the layer every other capability stands on.
 
 **Implements:** [ontology-config-blueprint](ontology-config-blueprint)
-**Story:** [AHA-0021](AHA-0021)
-**Code:** config, _yaml_unique
-**Status:** landed 2026-11-02 (AHA-0021); the flip story in the method's repository repoints its consumers to this seam
+**Stories:** [AHA-0021](AHA-0021), [AHA-0035](AHA-0035)
+**Code:** config, cli_workspace, _yaml_unique
+**Status:** landed 2026-11-02 (AHA-0021); the flip story in the method's repository repoints its consumers to this seam; AHA-0035 added the workspace folder set (additive, the frozen six-function seam unchanged)
 
 ## Overview
 
@@ -23,6 +23,7 @@ The graduation's Phase 1: the method's config/instance-state layer moved into th
 8. **The flip absorbs the blast radius at one wrapper** - the method's flip keeps one thin method-side wrapper defaulting `epic="evolucean"` for its 51 parameterless call sites, and its guard censuses call sites, not import lines: an import that resolves is not a call that reads the right file.
 9. **The wrapper ports the settings `workspace_dir` preference** - the ported `get_workspace_dir` read the settings key first (live steering: a relocating instance sets it), while this door's frozen contract is env + default; the wrapper carries locate-then-override (the ported order) so post-flip behavior is identical. Checkpoint 2's gap finding (both resolutions agree today, so the divergence is invisible until an instance relocates); neither reopens the API shape.
 10. **The project-fallback tail is settled consciously at the flip** - the ported precedence had a third step (a project config file, which exists in the source tree); the door reads `{}` when the workspace file is absent. Recorded recommendation: no project fallback in the wrapper - the door's contract is workspace file or `AHABASE_CONFIG` - with the flip measuring first whether that file's live content is read by any workspace-less layout (fresh checkout, CI, temp trees) before dropping it.
+11. **The seven standard folders (AHA-0035)** - every workspace carries `_config`, `_data`, `_generated`, `_inbox`, `_temp`, `_wikis`, `_worktrees` at its root (the Human ruling 2026-11-22, the proven workspace topology): `ensure_standard_folders()` creates the set on demand, idempotently - a deleted folder reappears, existing contents are never touched - and no Epic repository ever receives any of the seven (the story worktree home is `<workspace>/_worktrees/<repo>`, never in-repo). The CLI door is `ahabase workspace ensure` (`cli_workspace`). Additive to the frozen six: the flip's quoted contract text is unchanged.
 
 ## Template
 
@@ -42,9 +43,10 @@ The seam contract, the text the method's flip story quotes verbatim (frozen at t
 
 | Module | Role |
 |---|---|
-| `src/ahabase/config.py` | the door: the six surface functions + the private helpers (`_settings_path`, `_stale_seconds`, `_scopes_dir`, `_expand_path`, `_check_epic`) |
+| `src/ahabase/config.py` | the door: the six surface functions + the private helpers (`_settings_path`, `_stale_seconds`, `_scopes_dir`, `_expand_path`, `_check_epic`) and the AHA-0035 folder set (`STANDARD_FOLDERS`, `ensure_standard_folders`) |
+| `src/ahabase/cli_workspace.py` | the `ahabase workspace ensure` door - the folder census as the consumer's idempotent act (AHA-0035) |
 | `src/ahabase/_yaml_unique.py` | the duplicated-key-warns loader the settings load rides on (ported) |
-| `src/ahabase/__init__.py` | re-exports the six - the package seam |
+| `src/ahabase/__init__.py` | re-exports the surface - the package seam |
 
 | Function | Shape | Ported from |
 |---|---|---|
@@ -54,10 +56,11 @@ The seam contract, the text the method's flip story quotes verbatim (frozen at t
 | `load_settings(*, epic)` | the epic's settings dict | the method config facade |
 | `get_data_dir(*, epic)` | the epic's data dir, created on demand | the method config facade |
 | `list_scope_holdings(*, epic)` | the sessions allowlist read with staleness | the method's scopes config |
+| `ensure_standard_folders()` | the seven standard folders at the workspace root, created on demand, idempotent | new (AHA-0035, the Human ruling 2026-11-22) |
 
 ## Example
 
-The suite that holds the rules measured: `tests/test_config_door.py` - composition (name-for-name), required keyword, precedence, data layout, epic-name validation, holdings allowlist. Canonical call:
+The suites that hold the rules measured: `tests/test_config_door.py` - composition (name-for-name), required keyword, precedence, data layout, epic-name validation, holdings allowlist - and `tests/test_workspace.py` - the folder census, both polarities (AHA-0035). Canonical call:
 
 ```python
 from ahabase import load_settings, get_data_dir
@@ -66,7 +69,14 @@ load_settings(epic="amethod")      # <workspace>/_config/amethod-cli-settings.ym
 get_data_dir(epic="amethod")       # <workspace>/_data/amethod, created on demand
 ```
 
+The consumer's act at the CLI (AHA-0035):
+
+```sh
+ahabase workspace ensure   # the seven standard folders at the workspace root, idempotent
+```
+
 ## Related
 
 - [ontology-config-blueprint](ontology-config-blueprint) - the concept this implements
 - [AHA-0021](AHA-0021) - the landing story (evidence rows, red controls, review log)
+- [AHA-0035](AHA-0035) - the workspace folder set (the Human ruling 2026-11-22)

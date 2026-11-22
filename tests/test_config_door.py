@@ -19,7 +19,9 @@ import yaml
 import ahabase
 from ahabase import config
 
-#: The seam contract's surface - the whole of it, name for name.
+#: The seam contract's surface - the whole of it, name for name. The six
+#: the flip quotes (frozen at the door's first release) plus the AHA-0035
+#: addition: the workspace folder set (the Human ruling 2026-11-22).
 SURFACE = {
     "get_workspace_dir",
     "get_instance_root",
@@ -27,6 +29,7 @@ SURFACE = {
     "load_settings",
     "get_data_dir",
     "list_scope_holdings",
+    "ensure_standard_folders",
 }
 
 #: The allowlist of list_scope_holdings - the contract the consumers
