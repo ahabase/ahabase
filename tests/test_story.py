@@ -59,8 +59,12 @@ def _git(cwd: Path, *args: str) -> None:
 
 
 @pytest.fixture
-def repo(tmp_path: Path) -> Path:
-    """A scratch consumer Epic in its own git repository on main."""
+def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A scratch consumer Epic in its own git repository on main; the
+    workspace is pinned to tmp_path so the workspace-level worktree home
+    (AHA-0035: ``<workspace>/_worktrees/<repo>/<STORY>``) stays inside the
+    test's throwaway tree."""
+    monkeypatch.setenv("AHABASE_WORKSPACE", str(tmp_path))
     root = tmp_path / "demo"
     _write(root / "_grid4d/story/DEMO.md", IDENTITY)
     _write(root / "_grid4d/story/DEMO-Priorities.md", PRIORITIES)
@@ -96,7 +100,11 @@ def test_create_mints_the_next_number_and_a_valid_set(repo: Path) -> None:
     """One more than history's max; the worktree, the branch, and a story
     set that passes the R1 validator."""
     worktree = story.create(load(repo), "first story")
-    assert worktree == repo / "_worktrees" / "DEMO-0002"
+    assert worktree == repo.parent / "_worktrees" / repo.name / "DEMO-0002"
+    # the workspace-level home (AHA-0035): nothing worktree-shaped lands
+    # inside the repository, and no ignore entry is injected
+    assert not (repo / "_worktrees").exists()
+    assert not (repo / ".gitignore").exists()
     assert f"feature/DEMO-0002-first-story" in _branches(repo)
     docs = {path.name for path in (worktree / "_grid4d" / "story").glob("DEMO-0002*")}
     assert docs == {"DEMO-0002.md", "DEMO-0002-tests.md", "DEMO-0002-knowledge-map.md"}
@@ -112,7 +120,7 @@ def test_create_mints_the_next_number_and_a_valid_set(repo: Path) -> None:
 def test_status_reports_active_open_and_completed(repo: Path) -> None:
     worktree = story.create(load(repo), "first story")
     lines = story.status(load(repo))
-    assert lines[0] == "active: DEMO-0002 (worktree _worktrees/DEMO-0002)"
+    assert lines[0] == "active: DEMO-0002 (worktree _worktrees/demo/DEMO-0002)"
     assert lines[1] == "open: DEMO-0002 (worktree, in_progress)"
     assert lines[2] == "completed: 1"
     story.complete(load(repo), "DEMO-0002")
@@ -137,7 +145,7 @@ def test_complete_tags_merges_and_keeps_the_set_in_window(repo: Path) -> None:
 
     assert _tags(repo) == ["vDEMO-0002"]
     assert "feature/DEMO-0002-first-story" not in _branches(repo)
-    assert not (repo / "_worktrees/DEMO-0002").exists()
+    assert not (repo.parent / "_worktrees" / repo.name / "DEMO-0002").exists()
     # within the window (default 2): the completed set stays reachable in story/
     kept = {p.name for p in (repo / "_grid4d/story").glob("DEMO-0002*")}
     assert kept == {"DEMO-0002.md", "DEMO-0002-tests.md", "DEMO-0002-knowledge-map.md"}
@@ -154,7 +162,7 @@ def test_a_re_run_of_create_mints_the_next_number(repo: Path) -> None:
     story.create(load(repo), "first story")
     story.complete(load(repo), "DEMO-0002")
     second = story.create(load(repo), "second story")
-    assert second == repo / "_worktrees" / "DEMO-0003"
+    assert second == repo.parent / "_worktrees" / repo.name / "DEMO-0003"
 
 
 def test_create_refuses_a_dirty_main_tree(repo: Path) -> None:
@@ -231,7 +239,8 @@ def test_complete_refuses_a_dirty_root(repo: Path) -> None:
     with pytest.raises(story.StoryError, match="uncommitted changes"):
         story.complete(load(repo), "DEMO-0002")
     assert _tags(repo) == []
-    text = (repo / "_worktrees/DEMO-0002/_grid4d/story/DEMO-0002.md").read_text(encoding="utf-8")
+    text = (repo.parent / "_worktrees" / repo.name
+            / "DEMO-0002/_grid4d/story/DEMO-0002.md").read_text(encoding="utf-8")
     assert "**Status:** in_progress" in text
 
 
@@ -306,7 +315,7 @@ def test_complete_re_runs_after_the_conflict_is_resolved(repo: Path) -> None:
     story.complete(load(repo), "DEMO-0003")
 
     assert _tags(repo) == ["vDEMO-0002", "vDEMO-0003"]
-    assert not (repo / "_worktrees/DEMO-0003").exists()
+    assert not (repo.parent / "_worktrees" / repo.name / "DEMO-0003").exists()
     assert "feature/DEMO-0003-second-story" not in _branches(repo)
     text = (repo / "_grid4d/story/DEMO-0003.md").read_text(encoding="utf-8")
     assert "**Status:** completed" in text

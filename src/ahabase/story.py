@@ -19,7 +19,8 @@ whichever tree the command runs from.
 
 - ``create`` refuses a dirty main tree, branches
   ``feature/<STORY>-<short-desc>`` from the main branch, adds the
-  worktree ``_worktrees/<STORY>`` (ignoring ``_worktrees/`` in git),
+  worktree at the workspace level (``<workspace>/_worktrees/<repo>/<STORY>``
+  - outside the repository, AHA-0035: nothing to ignore in git),
   and mints the story set (story, tests, knowledge map) from the R1
   pattern templates - a whole-file fill of the provided keys, every
   other placeholder left verbatim as the visible TODO.
@@ -59,6 +60,7 @@ from pathlib import Path
 
 from filelock import Timeout
 
+from .config import get_workspace_dir
 from .epic import Epic, header
 from .grid4d import fill, pattern_template
 
@@ -118,11 +120,19 @@ def history_keep(epic: Epic) -> int:
     return int(value)
 
 
+def _worktrees_dir(epic: Epic) -> Path:
+    """The worktrees home: ``<workspace>/_worktrees/<repo-directory>`` - at
+    the workspace root, outside every repository (the proven topology,
+    AHA-0035); the repository's directory name is its shelf, and nothing
+    worktree-shaped ever lands inside the repository itself."""
+    return get_workspace_dir() / "_worktrees" / epic.root.name
+
+
 def _story_dirs(epic: Epic) -> list[Path]:
     """Every folder the numbering scan reads: the story folders of the main
     tree (with history) and of each live worktree."""
     dirs = [epic.grid / "story", epic.grid / "story" / "history"]
-    worktrees = epic.root / "_worktrees"
+    worktrees = _worktrees_dir(epic)
     if worktrees.is_dir():
         for worktree in sorted(worktrees.iterdir()):
             if worktree.is_dir():
@@ -179,23 +189,6 @@ def _lifecycle_lock(root: Path):
             f"(waited {_LOCK_TIMEOUT:.0f}s) - retry once it finishes") from None
 
 
-def _ignore_worktrees(root: Path) -> None:
-    """Keep ``_worktrees/`` out of the consumer's git status; the ignore
-    line is committed so the tree stays clean after create."""
-    gitignore = root / ".gitignore"
-    present = gitignore.is_file() and any(
-        line.strip() == "_worktrees/" for line in gitignore.read_text(encoding="utf-8").splitlines())
-    if present:
-        return
-    existing = gitignore.read_text(encoding="utf-8") if gitignore.is_file() else ""
-    with gitignore.open("a", encoding="utf-8") as handle:
-        if existing and not existing.endswith("\n"):
-            handle.write("\n")
-        handle.write("_worktrees/\n")
-    _git(root, "add", ".gitignore")
-    _git(root, "commit", "-m", "chore: ignore story worktrees")
-
-
 def _is_corpse(corpse: Path, story: str, held: str) -> bool:
     """Strictly a half-minted corpse, never a live story's tree: the
     branch's reflog holds only its creation entry (no commit ever moved
@@ -236,7 +229,7 @@ def _heal_half_minted(epic: Epic, branch: str) -> list[str]:
     mint's worktree passes through the same state, but never outside
     the lock. Returns the healed names."""
     pattern = re.compile(rf"^{re.escape(epic.story_prefix)}-\d+$")
-    worktrees = epic.root / "_worktrees"
+    worktrees = _worktrees_dir(epic)
     healed: list[str] = []
     if not worktrees.is_dir():
         return healed
@@ -274,12 +267,12 @@ def create(epic: Epic, description: str) -> Path:
         branch = main_branch(epic)
         _heal_half_minted(epic, branch)
         story = f"{epic.story_prefix}-{next_number(epic):04d}"
-        worktree = root / "_worktrees" / story
+        worktree = _worktrees_dir(epic) / story
         if worktree.exists():
             raise StoryError(
                 f"{worktree} already exists and is not a half-minted corpse "
                 "- the mint refuses to overwrite it")
-        _ignore_worktrees(root)
+        worktree.parent.mkdir(parents=True, exist_ok=True)
         feature = f"feature/{story}-{_slug(description)}"
         _git(root, "worktree", "add", "-b", feature, str(worktree), branch)
         try:
@@ -330,7 +323,7 @@ def status(epic: Epic) -> list[str]:
     root = epic.root
     worktree_stories: list[str] = []
     open_stories: list[str] = []
-    worktrees = root / "_worktrees"
+    worktrees = _worktrees_dir(epic)
     if worktrees.is_dir():
         for worktree in sorted(worktrees.iterdir()):
             doc = worktree / "_grid4d" / "story" / f"{worktree.name}.md"
@@ -351,7 +344,8 @@ def status(epic: Epic) -> list[str]:
         archived = re.compile(rf"^{re.escape(epic.story_prefix)}-(\d+)")
         completed |= {archived.match(p.name).group(1) for p in history.glob("*.md")
                       if archived.match(p.name)}
-    active = f"active: {worktree_stories[0]} (worktree _worktrees/{worktree_stories[0]})" \
+    active = (f"active: {worktree_stories[0]} "
+              f"(worktree _worktrees/{root.name}/{worktree_stories[0]})") \
         if worktree_stories else "active: none"
     return [active, f"open: {', '.join(open_stories) if open_stories else 'none'}",
             f"completed: {len(completed)}"]
@@ -366,10 +360,10 @@ def complete(epic: Epic, story: str) -> None:
     completion under the lifecycle lock, so concurrent sessions complete
     serially, each landing its own merge."""
     root = epic.root
-    worktree = root / "_worktrees" / story
+    worktree = _worktrees_dir(epic) / story
     with _lifecycle_lock(root):
         if not worktree.is_dir():
-            raise StoryError(f"no worktree for {story} under {root / '_worktrees'}")
+            raise StoryError(f"no worktree for {story} under {worktree.parent}")
         _require_clean(worktree)
         story_dir = worktree / "_grid4d" / "story"
         for suffix in ("", "-tests", "-knowledge-map"):

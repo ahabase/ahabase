@@ -5,7 +5,10 @@
 # throwaway directory, AHABASE_WORKSPACE / AHABASE_CONFIG / AHABASE_HOME are
 # unset (the documented env keys are the experiment's controls, not its
 # result), so every home-default path of the shipped code lands inside the
-# sandbox - asserted after the leg by a HOME snapshot that must be unchanged.
+# sandbox. AHA-0035: the story worktree home is the workspace's own
+# `_worktrees/` (the default `~/ahabase`, inside the sandboxed HOME), so the
+# closing HOME snapshot must be unchanged OUTSIDE `ahabase/_worktrees/` while
+# the workspace itself is asserted to hold exactly the live story's worktree.
 #
 # The clean venv installs the BUILT WHEEL (never -e, never the source tree);
 # every ahabase command runs with cwd outside the source tree; pip show +
@@ -73,9 +76,10 @@ git config init.defaultBranch main
 "$AHABASE" init DEMO --root . || fail "init refused the fresh tree"
 
 inventory() {
-    # the scratch repo, sorted, git internals pruned, the story worktrees
-    # counted one level deep (their checkout is a copy of this very repo)
-    find . -name .git -prune -o -path './_worktrees/*/*' -prune -o -print \
+    # the scratch repo, sorted, git internals pruned; AHA-0035: nothing
+    # worktree-shaped ever lands inside the repository, so the listing is
+    # the whole tree - any _worktrees path would turn the diff red
+    find . -name .git -prune -o -print \
         | sed 's|^\./||' | grep -v '^\.$' | LC_ALL=C sort
 }
 expect_inventory() {
@@ -84,7 +88,7 @@ expect_inventory() {
     printf '%s\n' "$@" > "$SANDBOX/inv-expected.txt"
     diff -u "$SANDBOX/inv-expected.txt" "$SANDBOX/inv-actual.txt" \
         || fail "inventory after the $STEP step is not the declared allowlist (see the diff above)"
-    if find . -name .git -prune -o -path './_worktrees/*' -prune -o \
+    if find . -name .git -prune -o \
         \( -name '*.yaml' -o -name '*.yml' -o -name '*.json' \) -print | grep .; then
         fail "a registry-shaped file (yaml/json) appeared in the scratch repo"
     fi
@@ -144,20 +148,26 @@ mv ../DEMO.md.bak _grid4d/story/DEMO.md
 expect_inventory validate $INIT_ALLOWLIST
 
 # --- R2: the lifecycle end to end ------------------------------------------
+# AHA-0035: the worktree home is the workspace root's own `_worktrees/` -
+# `<workspace>/_worktrees/<repo-directory>/<STORY>`, outside the repository.
+# The workspace here is the shipped default (`~/ahabase` under the
+# sandboxed HOME), so the default resolution is what this leg measures.
+WS="$HOME/ahabase"
+WT="$WS/_worktrees/demo"
 # one_story_cycle NUMBER DESCRIPTION [allowlist...]: the caller declares the
 # net the tree must hold right after create (the create-point inventory).
 one_story_cycle() {
     NUMBER="$1"; DESCRIPTION="$2"; shift 2
     note "story create: mint DEMO-$NUMBER"
     "$AHABASE" story create "$DESCRIPTION" --root . || fail "story create refused"
-    ls "_worktrees/DEMO-$NUMBER/_grid4d/story/" || fail "no minted set in the worktree"
-    [ "$(cat .gitignore)" = "_worktrees/" ] || fail "the engine did not ignore _worktrees/ in git"
+    ls "$WT/DEMO-$NUMBER/_grid4d/story/" || fail "no minted set in the workspace worktree"
+    [ ! -e .gitignore ] || fail "the engine injected an ignore entry (retired by AHA-0035)"
     note "story create: the minted set validates"
-    ( cd "_worktrees/DEMO-$NUMBER" && "$AHABASE" validate --root . ) \
+    ( cd "$WT/DEMO-$NUMBER" && "$AHABASE" validate --root . ) \
         || fail "the minted story set does not validate"
     expect_inventory "create$NUMBER" "$@"
     note "one document edit, committed"
-    ( cd "_worktrees/DEMO-$NUMBER" \
+    ( cd "$WT/DEMO-$NUMBER" \
         && perl -pi -e "s/\\{GOAL\\}/the edited goal $NUMBER/" "_grid4d/story/DEMO-$NUMBER.md" \
         && git add -A \
         && git commit -q -m "DEMO-$NUMBER(docs): the one edit" )
@@ -167,24 +177,12 @@ one_story_cycle() {
     "$AHABASE" story complete "DEMO-$NUMBER" --root . || fail "story complete refused"
 }
 
-CREATE1_ALLOWLIST=".gitignore
-_grid4d
-_grid4d/idea
-_grid4d/implementation
-_grid4d/issue
-_grid4d/metric
-_grid4d/ontology
-_grid4d/pattern
-_grid4d/playbook
-_grid4d/story
-_grid4d/story/DEMO.md
-_worktrees
-_worktrees/DEMO-0001"
-one_story_cycle 0001 "first story" $CREATE1_ALLOWLIST
+# the create-point net is the init net verbatim: the mint touches the
+# workspace, never the repository (AHA-0035 - no .gitignore, no _worktrees)
+one_story_cycle 0001 "first story" $INIT_ALLOWLIST
 
 # window 1: the completed set stays reachable in story/, nothing archived yet
-COMPLETE1_ALLOWLIST=".gitignore
-_grid4d
+COMPLETE1_ALLOWLIST="_grid4d
 _grid4d/idea
 _grid4d/implementation
 _grid4d/issue
@@ -196,32 +194,14 @@ _grid4d/story
 _grid4d/story/DEMO-0001-knowledge-map.md
 _grid4d/story/DEMO-0001-tests.md
 _grid4d/story/DEMO-0001.md
-_grid4d/story/DEMO.md
-_worktrees"
+_grid4d/story/DEMO.md"
 expect_inventory complete1 $COMPLETE1_ALLOWLIST
 
-CREATE2_ALLOWLIST=".gitignore
-_grid4d
-_grid4d/idea
-_grid4d/implementation
-_grid4d/issue
-_grid4d/metric
-_grid4d/ontology
-_grid4d/pattern
-_grid4d/playbook
-_grid4d/story
-_grid4d/story/DEMO-0001-knowledge-map.md
-_grid4d/story/DEMO-0001-tests.md
-_grid4d/story/DEMO-0001.md
-_grid4d/story/DEMO.md
-_worktrees
-_worktrees/DEMO-0002"
-one_story_cycle 0002 "second story" $CREATE2_ALLOWLIST
+one_story_cycle 0002 "second story" $COMPLETE1_ALLOWLIST
 
 # beyond the window: DEMO-0001 moved to history/ (archived, never deleted),
 # DEMO-0002 stays in story/
-COMPLETE2_ALLOWLIST=".gitignore
-_grid4d
+COMPLETE2_ALLOWLIST="_grid4d
 _grid4d/idea
 _grid4d/implementation
 _grid4d/issue
@@ -237,8 +217,7 @@ _grid4d/story/DEMO.md
 _grid4d/story/history
 _grid4d/story/history/DEMO-0001-knowledge-map.md
 _grid4d/story/history/DEMO-0001-tests.md
-_grid4d/story/history/DEMO-0001.md
-_worktrees"
+_grid4d/story/history/DEMO-0001.md"
 expect_inventory complete2 $COMPLETE2_ALLOWLIST
 
 note "git evidence"
@@ -251,7 +230,8 @@ for tag in vDEMO-0001 vDEMO-0002; do
     git merge-base --is-ancestor "$(git rev-parse "$tag")" HEAD \
         || fail "main does not carry the completed story $tag"
 done
-[ ! -d _worktrees/DEMO-0002 ] || fail "the worktree survived completion"
+[ ! -d "$WT/DEMO-0002" ] || fail "the worktree survived completion"
+[ ! -e _worktrees ] || fail "an in-repo _worktrees survived the lifecycle (AHA-0035)"
 git branch --list "feature/DEMO-*" | grep . && fail "a story branch survived completion" || true
 
 note "story status after completion"
@@ -261,11 +241,19 @@ note "story create re-run: the scan mints the next number"
 OUT="$("$AHABASE" story create "third story" --root .)" || fail "the re-run refused"
 echo "$OUT"
 echo "$OUT" | grep -q "DEMO-0003 minted" || fail "the re-run did not mint DEMO-0003"
+[ -d "$WT/DEMO-0003" ] || fail "the live worktree is not at the workspace root (AHA-0035)"
+# the workspace holds exactly the live story's worktree - completions 1 and 2
+# removed theirs, the re-run mint holds the shelf now
+ls "$WT" | grep -v '^DEMO-0003$' | grep . \
+    && fail "the workspace worktree shelf holds more than the live story" || true
 
-# --- the HOME snapshot: the shipped code added nothing ----------------------
-find "$HOME" -type f | sort > "$SANDBOX/home-after.txt"
+# --- the HOME snapshot: nothing outside the declared workspace --------------
+# AHA-0035: the shipped code writes its worktrees under the default
+# workspace's `_worktrees/` (inside the sandboxed HOME) and nowhere else -
+# everything in HOME outside that subtree must be byte-for-byte unchanged.
+find "$HOME" -type f -not -path "$WS/_worktrees/*" | sort > "$SANDBOX/home-after.txt"
 diff -u "$SANDBOX/home-before.txt" "$SANDBOX/home-after.txt" \
-    || fail "the shipped code wrote into HOME (see the diff above)"
-note "HOME: unchanged by every ahabase command"
+    || fail "the shipped code wrote into HOME outside ahabase/_worktrees/ (see the diff above)"
+note "HOME: unchanged outside ahabase/_worktrees/ by every ahabase command"
 
 note "LEG GREEN: the consumer leg holds (exit 0)"

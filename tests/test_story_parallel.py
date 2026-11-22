@@ -52,7 +52,8 @@ def _git_out(root: Path, *args: str) -> str:
 def test_r1_concurrent_create_mints_distinct_numbers_without_a_wedge(repo: Path) -> None:
     """Five rounds, two create processes fired simultaneously per round:
     both mint each round, the numbers stay distinct and monotone, no
-    orphan branch, no prunable admin entry, one ignore line, no
+    orphan branch, no prunable admin entry, no injected ignore entry
+    (AHA-0035: the worktree home is outside the repository), no
     traceback anywhere."""
     for round_ in range(5):
         procs = [_spawn(repo, "story", "create", f"round {round_} {tag}")
@@ -62,13 +63,12 @@ def test_r1_concurrent_create_mints_distinct_numbers_without_a_wedge(repo: Path)
             assert "Traceback" not in output
         numbers = sorted(MINTED.search(output).group(1) for output in outputs)
         assert numbers[0] != numbers[1], outputs
-    worktrees = sorted(path.name for path in (repo / "_worktrees").iterdir())
+    worktrees = sorted(path.name for path in
+                       (repo.parent / "_worktrees" / repo.name).iterdir())
     assert worktrees == sorted(f"DEMO-{number:04d}" for number in range(2, 12))
     assert len(_branches(repo)) == 1 + 10  # main plus the ten story branches, no orphans
     assert "prunable" not in _git_out(repo, "worktree", "list", "--porcelain")
-    ignores = [line for line in (repo / ".gitignore").read_text(encoding="utf-8").splitlines()
-               if line.strip() == "_worktrees/"]
-    assert len(ignores) == 1
+    assert not (repo / ".gitignore").exists()
 
 
 def test_r1cwd_one_lock_whichever_cwd(repo: Path) -> None:
@@ -105,7 +105,7 @@ def test_r2_concurrent_complete_both_land(repo: Path) -> None:
     for name in names:
         assert subjects.count(f"merge {name} (story complete)") == 1
     assert sorted(_tags(repo)) == sorted(f"v{name}" for name in names)
-    assert not any((repo / "_worktrees").iterdir())
+    assert not any((repo.parent / "_worktrees" / repo.name).iterdir())
     assert _branches(repo) == ["main"]
     assert story.status(load(repo))[-1] == "completed: 3"  # the history floor plus both
 
@@ -171,7 +171,7 @@ def test_r4a_a_killed_holder_releases_the_lock_and_the_next_create_heals_corpses
     # main, no story set anywhere - the state the next create must heal,
     # not refuse
     _git_out(repo, "worktree", "add", "-b", "feature/DEMO-0003-corpse",
-             str(repo / "_worktrees/DEMO-0003"))
+             str(repo.parent / "_worktrees" / repo.name / "DEMO-0003"))
     output = _finish(_spawn(repo, "story", "create", "heals the bare corpse"))
     assert MINTED.search(output).group(1) == "DEMO-0003"
     assert "feature/DEMO-0003-corpse" not in _branches(repo)
@@ -182,14 +182,16 @@ def test_r4a_a_killed_holder_releases_the_lock_and_the_next_create_heals_corpses
     # it and skip the number; the heal removes the corpse first, so the
     # number returns instead of orphaning the corpse forever
     _git_out(repo, "worktree", "add", "-b", "feature/DEMO-0004-corpse",
-             str(repo / "_worktrees/DEMO-0004"))
-    doc = repo / "_worktrees/DEMO-0004/_grid4d/story/DEMO-0004.md"
+             str(repo.parent / "_worktrees" / repo.name / "DEMO-0004"))
+    doc = (repo.parent / "_worktrees" / repo.name / "DEMO-0004"
+           / "_grid4d/story/DEMO-0004.md")
     doc.parent.mkdir(parents=True, exist_ok=True)
     doc.write_text("# DEMO-0004: a corpse with its writes done\n", encoding="utf-8")
     output = _finish(_spawn(repo, "story", "create", "heals the written corpse"))
     assert MINTED.search(output).group(1) == "DEMO-0004"
     assert "feature/DEMO-0004-corpse" not in _branches(repo)
-    live = sorted(path.name for path in (repo / "_worktrees").iterdir())
+    live = sorted(path.name for path in
+                  (repo.parent / "_worktrees" / repo.name).iterdir())
     assert live == ["DEMO-0002", "DEMO-0003", "DEMO-0004"]  # the heals left no corpse behind
 
     # a HAND-MERGED story (the consumer landed it by plain git, main fast
@@ -233,8 +235,8 @@ def test_r4a_a_killed_holder_releases_the_lock_and_the_next_create_heals_corpses
     # not the mint's own dirt; its story doc sits uncommitted on disk,
     # so the scan counts it and the create mints PAST it
     _git_out(repo, "worktree", "add", "-b", "feature/DEMO-0009-handmade",
-             str(repo / "_worktrees/DEMO-0009"))
-    handmade = repo / "_worktrees/DEMO-0009"
+             str(repo.parent / "_worktrees" / repo.name / "DEMO-0009"))
+    handmade = repo.parent / "_worktrees" / repo.name / "DEMO-0009"
     doc = handmade / "_grid4d/story/DEMO-0009.md"
     doc.parent.mkdir(parents=True, exist_ok=True)
     doc.write_text("# DEMO-0009: hand-made, one foreign file\n", encoding="utf-8")
@@ -245,7 +247,8 @@ def test_r4a_a_killed_holder_releases_the_lock_and_the_next_create_heals_corpses
     assert "feature/DEMO-0009-handmade" in _branches(repo)
 
     # nothing above was healed away: every story-named worktree is alive
-    live = sorted(path.name for path in (repo / "_worktrees").iterdir())
+    live = sorted(path.name for path in
+                  (repo.parent / "_worktrees" / repo.name).iterdir())
     assert live == sorted(f"DEMO-{number:04d}" for number in range(2, 11))
 
 
@@ -276,11 +279,14 @@ def test_r4b_a_failure_inside_the_mint_cleans_up_and_refuses_by_name(
     assert result.exit_code == 1
     assert "the pretend-full disk" in result.output
     assert "the worktree and the branch were removed" in result.output
-    assert not (repo / "_worktrees/DEMO-0002").exists()
+    assert not (repo.parent / "_worktrees" / repo.name / "DEMO-0002").exists()
     assert _branches(repo) == ["main"]
     assert story.status(load(repo))[0] == "active: none"
 
-    monkeypatch.undo()
+    # targeted restore - a bare undo would also drop the fixture's
+    # AHABASE_WORKSPACE pin (same monkeypatch instance), and the next
+    # mint would land in the real ~/ahabase workspace (AHA-0035)
+    monkeypatch.setattr(story, "fill", original)
     assert story.create(load(repo), "recovered story").name == "DEMO-0002"
 
     # the interrupt class: click's Abort (SIGINT through the door) cleans
@@ -300,7 +306,7 @@ def test_r4b_a_failure_inside_the_mint_cleans_up_and_refuses_by_name(
     assert result.exit_code == 1
     assert "failed (Abort)" in result.output
     assert "the worktree and the branch were removed" in result.output
-    assert not (repo / "_worktrees/DEMO-0003").exists()
+    assert not (repo.parent / "_worktrees" / repo.name / "DEMO-0003").exists()
 
     # a raw KeyboardInterrupt (not an Exception subclass): the cleanup
     # runs, then the interrupt keeps its class AT THE ENGINE - never
@@ -317,10 +323,10 @@ def test_r4b_a_failure_inside_the_mint_cleans_up_and_refuses_by_name(
     monkeypatch.setattr(story, "fill", interrupting)
     with pytest.raises(KeyboardInterrupt):
         story.create(load(repo), "interrupted story")
-    assert not (repo / "_worktrees/DEMO-0003").exists()
+    assert not (repo.parent / "_worktrees" / repo.name / "DEMO-0003").exists()
     assert sorted(_branches(repo)) == ["feature/DEMO-0002-recovered-story", "main"]
 
-    monkeypatch.undo()
+    monkeypatch.setattr(story, "fill", original)  # targeted, never a bare undo
     assert story.create(load(repo), "second recovery").name == "DEMO-0003"
 
 
