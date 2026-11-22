@@ -13,7 +13,7 @@
 **GitOperations:** true
 **SnapshotOnComplete:** true
 **StoryHistoryKeep:** 2
-**GitHubAccount:** <user>
+**GitHubAccount:** lubomirkamensky
 **CodeArtifacts:** src/ahabase
 
 ## Overview
