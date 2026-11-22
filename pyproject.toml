@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling>=1.27"]  # PEP 639 license expression
+build-backend = "hatchling.build"
+
+[project]
+name = "ahabase"
+dynamic = ["version"]
+description = "The open door to ahabase: the grid4d format, shared services and the doors (CLI, MCP, Claude Code plugin) plugins build on."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = ["click>=8.1", "filelock>=3.10", "keyring>=25", "pyyaml>=6"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "build>=1.2", "hatchling>=1.27"]
+
+[project.scripts]
+ahabase = "ahabase.cli:main"
+
+[tool.hatch.version]
+path = "src/ahabase/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ahabase"]
+
+[tool.hatch.build.targets.sdist]
+# the Epic's knowledge (_grid4d) is not part of the package; "/tests" is
+# anchored to the root - a bare "tests" also matched playground/tests/ and
+# shipped the consumer playground's suites in the sdist (AHA-0031 leak,
+# caught by the containment gate)
+include = ["src/ahabase", "/tests", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

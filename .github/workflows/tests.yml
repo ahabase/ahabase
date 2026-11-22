@@ -1,0 +1,29 @@
+# AHA-0014 R4: the suite proves both OS variants - a story that breaks the
+# other OS turns the matrix red. AHA-0034 R1: the org Actions-minutes pool is
+# account-wide and drained once - Linux runs on every push, the full three-OS
+# matrix runs on tags (releases) and manual dispatch.
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  suite:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')) && fromJSON('["macos-latest", "windows-latest", "ubuntu-latest"]') || fromJSON('["ubuntu-latest"]') }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"  # the oldest supported, the honest lane
+      - name: Install
+        run: python -m pip install -e ".[test]"  # quoted: PowerShell treats [ ] as a wildcard
+      - name: Suite
+        run: python -m pytest -q
