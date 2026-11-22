@@ -24,7 +24,7 @@ _data/           engine state, per epic (<epic>/)
 _generated/      generated projections (the engine writes, the consumer reads)
 _inbox/          external inputs
 _temp/           scratch space
-_wikis/          local wiki copies (the wiki capability's home, to come)
+_wikis/          local wiki mirrors: _wikis/<epic>.wiki/ (ahabase wiki sync)
 _worktrees/      story worktrees: <repo>/<STORY>/ - at the workspace root,
                  outside every repository
 ```
@@ -73,6 +73,29 @@ cd ../../../repos/scratch   # return to the Epic's main tree, on the declared br
   Nothing is written before a refusal is cleared.
 - A conflicted merge aborts clean: resolve the conflict on the main branch,
   then re-run `complete`; it is idempotent.
+
+## The wiki mirror
+
+Every Epic can project its `_grid4d/` tree into a GitHub-wiki mirror under
+`_wikis/`:
+
+```sh
+.venv/bin/ahabase wiki sync --epic scratch      # documents into _wikis/scratch.wiki/
+.venv/bin/ahabase wiki generate --epic scratch  # _Sidebar.md + Home.md from the yaml
+.venv/bin/ahabase wiki check --epic scratch     # duplicates (exit 3 when found)
+.venv/bin/ahabase wiki clean --epic scratch     # dedupe, the root copy wins
+.venv/bin/ahabase wiki publish --epic scratch   # commit the delta, push <repo>.wiki.git
+```
+
+The config is `_config/<epic>.wiki.yaml` (target, source, the documents
+mapping, auto-sync patterns, the sidebar/home content) - absent means the
+defaults (the standard mirror path, `_grid4d/`, no mapping). `publish`
+runs under the Epic identity's declared `**GitHubAccount:**` through the
+safe's credential chain - an account mismatch refuses with the remedy,
+and so does an unreachable wiki remote (enable the repository's wiki
+first: its Wiki tab, first page edit). `wiki status` shows the mirror's
+git state; a hand edit rides the next sync's purge unless the config
+accounts for it.
 
 ## Conventions
 

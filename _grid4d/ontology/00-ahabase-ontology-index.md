@@ -24,7 +24,7 @@ The skeleton of the whole Epic. Layers 2 and 3 are defined now, because the next
 | Layer | Concepts | State |
 |---|---|---|
 | 0 Primitives | Concept, Attribute, Relation, is_a, Ontology, Language | named - defined with layer 1 |
-| 1 Knowledge structure (the grid4d format) | Epic, SubEpic, Repository, Instance, Knowledge, Knowledge Class, Scope (ontology, implementation, story), Document Pattern, Story, Requirement, Test, Issue, Idea, Artifact, Identity, Epic Inheritance, Plugged-in Epic, Knowledge Map (the record of what a story used; its evaluation is a method's), Lineage, Projection | named - defined when the format moves; Lineage and Projection defined first, because the transparency core verifies them (AHA-0009) |
+| 1 Knowledge structure (the grid4d format) | Epic, SubEpic, Repository, Instance, Knowledge, Knowledge Class, Scope (ontology, implementation, story), Document Pattern, Story, Requirement, Test, Issue, Idea, Artifact, Identity, Epic Inheritance, Plugged-in Epic, Knowledge Map (the record of what a story used; its evaluation is a method's), Lineage, Projection, Wiki Projection | named - defined when the format moves; Lineage and Projection defined first, because the transparency core verifies them (AHA-0009); Wiki Projection defined with its landing (AHA-0036) |
 | 2 Trust and boundaries | Trust Zone, Boundary (the safe's concepts - Safe Value through Scan Finding - are the ahabase-safe subepic's vocabulary, [00-ahabase-safe-ontology-index](00-ahabase-safe-ontology-index)) | defined - implementation state per concept (Agent Guard, Output Watch and Scan Finding planned) |
 | 3 Platform | Door, Registry, Plugin, Health Check, Portability, Config | defined - implementation state per concept |
 | Collaboration (basis) | Instance, Sharing, Review, Verdict | named - defined with the collaboration story |
@@ -36,6 +36,7 @@ The skeleton of the whole Epic. Layers 2 and 3 are defined now, because the next
 - [Grid4d](ontology-grid4d-blueprint) - the knowledge-tree format: folders, a self-registering identity, naming, structure, links - one home per rule
 - [Lineage](ontology-lineage-blueprint) - the declared path from a concept to its code and back, and the check that both still agree
 - [Projection](ontology-projection-blueprint) - a view generated from the documents, never written by hand, the same bytes every time
+- [Wiki Projection](ontology-wiki-blueprint) - a projection into a GitHub-wiki mirror: generated, checked, published under the declared account (AHA-0036)
 
 ### Trust and boundaries
 
@@ -80,6 +81,7 @@ flowchart LR
         grid4d[grid4d]
         lineage[lineage]
         projection[projection]
+        wiki[wiki]
     end
     subgraph F1[Trust and boundaries]
         trust_zone[trust zone]
@@ -106,6 +108,9 @@ flowchart LR
     projection -->|run_by| door
     registry -->|read_by| door
     trust_zone -->|bounds| boundary
+    wiki -->|extends| projection
+    wiki -->|reads| grid4d
+    wiki -->|exposed by| door
 ```
 <!-- ontology-map:end -->
 

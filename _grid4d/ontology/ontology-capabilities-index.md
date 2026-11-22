@@ -44,6 +44,12 @@ Capabilities are functional categories that classify what the package's code doe
 - **agent-guard** → [Agent Guard](ontology-agent-guard-blueprint) - a value is revealed only to a person at an interactive terminal, destructive steps only after the owner confirms (cli_safe.py)
 - **platform-dispatch** → [Portability](ontology-portability-blueprint) - one codebase, per-OS arms chosen once at import (`_posix.py` / `_win.py`)
 
+### Wiki projection
+
+- **wiki-projection** → [Wiki Projection](ontology-wiki-blueprint) - the graduated wiki generation: `_grid4d/` documents into the `_wikis/<epic>.wiki` mirror (the five sync passes) and the `_Sidebar.md`/`Home.md` navigation rendered from the config (wiki/, cli_wiki.py, AHA-0036)
+- **wiki-validation** → [Wiki Projection](ontology-wiki-blueprint) - the mirror's duplicate check (exit 3 when found) and the dedupe clean, root copy wins (wiki/validate, wiki/clean)
+- **wiki-publishing** → [Wiki Projection](ontology-wiki-blueprint) - the publish tail: the mirror as a clone of the repository's wiki remote, the delta commit, the push under the declared account through the safe's credential chain, fail-closed (wiki/publish)
+
 ### Transparency
 
 - **lineage-validation** → [Lineage](ontology-lineage-blueprint) - the declared path from concept to implementation blueprint to code, checked in both directions; `ahabase verify` (lineage.py, epic.py, cli_transparency.py)
