@@ -110,6 +110,8 @@ tests:
 
 Run at b969d490b3b3baa6a91ca5036715437c6eea829e (rows R1 and R2 through R2_probe_fails_closed, R3 and R4 at the landing head); the round-1 rows and the re-measured counts at 7453a49dd46dd95b03a904fe6a2b85a0144d6607 (full suite 496 passed, cold CI on the built export 496 passed)
 
+Run at e7e984f398801672cb0f77edb2ee8f12db136f08
+
 ## Related
 
 - [AHA-0036](AHA-0036) - Parent story

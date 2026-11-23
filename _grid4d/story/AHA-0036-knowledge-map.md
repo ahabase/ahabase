@@ -13,7 +13,6 @@
 - [evolucean-ahabase-config-door-dossier](evolucean/evolucean-ahabase-config-door-dossier) (Entry)
 - [ontology-door-blueprint](ontology-door-blueprint) (Rule)
 - [implementation-ahabase-config-door-blueprint](implementation-ahabase-config-door-blueprint) (Rule)
-- [00-ahabase-llm-ontology-index](00-ahabase-llm-ontology-index) (Entry)
 - [AHA-0032-tests](AHA-0032-tests) (Check)
 - [AHA-0035-tests](AHA-0035-tests) (Check)
 - [issue-story-create-falls-through-unpinned-workspace](issue-story-create-falls-through-unpinned-workspace) (Entry)
@@ -24,6 +23,7 @@
 - [ontology-capabilities-index](ontology-capabilities-index) (Entry)
 - [00-ahabase-ontology-index](00-ahabase-ontology-index) (Entry)
 - [issue-remote-pin-guard](issue-remote-pin-guard) (Entry)
+- [00-ahabase-llm-ontology-index](00-ahabase-llm-ontology-index) (Entry)
 
 ## Created
 
