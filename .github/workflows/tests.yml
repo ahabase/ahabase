@@ -11,10 +11,14 @@ on:
   pull_request:
   workflow_dispatch:
 
-# AHA-0034 round 1: a push and its PR run on one ref no longer double-spend
+# AHA-0034 round 1: a push and its PR run on one ref no longer double-spend.
+# AHA-0037: only a feature branch or a PR cancels its superseded run. main
+# and the release tags always finish - a story completion pushes main twice
+# in seconds (the completion commit, then the history archive), and the
+# second push used to cancel the first run, which read as a failure.
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   suite:

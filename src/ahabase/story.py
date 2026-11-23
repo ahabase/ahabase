@@ -341,10 +341,10 @@ def status(epic: Epic) -> list[str]:
         it sits outside both."""
         for base in (get_workspace_dir(), epic.root):
             try:
-                return str(worktree.relative_to(base))
+                return worktree.relative_to(base).as_posix()
             except ValueError:
                 continue
-        return str(worktree)
+        return worktree.as_posix()
 
     for worktree in _worktree_paths(epic):
         doc = worktree / "_grid4d" / "story" / f"{worktree.name}.md"
