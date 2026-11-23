@@ -164,7 +164,7 @@ def test_legacy_in_repo_worktree_still_counts(repo: Path) -> None:
     assert (legacy / "_grid4d" / "story" / "DEMO-0002.md").is_file()
     listed = subprocess.run(["git", "worktree", "list"], cwd=repo,
                             capture_output=True, text=True).stdout
-    assert str(legacy) in listed
+    assert legacy.as_posix() in listed  # git prints posix separators on every platform
 
 
 def test_complete_tags_merges_and_keeps_the_set_in_window(repo: Path) -> None:

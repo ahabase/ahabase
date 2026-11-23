@@ -89,8 +89,13 @@ def test_r1cwd_one_lock_whichever_cwd(repo: Path) -> None:
         holder.release()
     output = _finish(waiter)
     assert MINTED.search(output)
+    # Never more than the one common lock file under the repository. The
+    # file stays on disk after release on POSIX; filelock's Windows lock
+    # deletes it on release, so "exactly one" there is "none left" - the
+    # invariant is "nothing but the common path".
     locks = list(repo.rglob("ahabase-story.lock"))
-    assert locks == [story._lock_path(repo)]
+    assert locks == [story._lock_path(repo)] or (
+        sys.platform == "win32" and locks == [])
 
 
 def test_r2_concurrent_complete_both_land(repo: Path) -> None:

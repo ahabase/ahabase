@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,10 +39,32 @@ def _stub_gh(tmp_path: Path, body: str, monkeypatch: pytest.MonkeyPatch) -> None
     finds it, the door runs unmeasured by the machine's gh."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(exist_ok=True)
-    gh = bin_dir / "gh"
-    gh.write_text(body)
-    gh.chmod(0o755)
+    if sys.platform == "win32":
+        # shutil.which matches PATHEXT names only: a bare "gh" script is
+        # invisible there and the runner's real gh.exe would answer instead
+        gh = bin_dir / "gh.cmd"
+        gh.write_text(_cmd_from_sh(body))
+    else:
+        gh = bin_dir / "gh"
+        gh.write_text(body)
+        gh.chmod(0o755)
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+
+
+def _cmd_from_sh(body: str) -> str:
+    """The stub's Windows spelling: the two shapes the rows use - print a
+    line and exit 0, or write to stderr and exit 1 - as a .cmd file."""
+    lines = ["@echo off"]
+    for line in body.splitlines():
+        if line.startswith("#!"):
+            continue
+        if line.startswith("printf '"):
+            lines.append("echo " + line.split("'")[1].replace("\\n", ""))
+        elif line.startswith("echo '") and ">&2" in line:
+            lines.append("echo " + line.split("'")[1] + " 1>&2")
+        elif line.startswith("exit "):
+            lines.append("exit /b " + line.split()[1])
+    return "\r\n".join(lines) + "\r\n"
 
 
 def _git(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
@@ -246,7 +269,7 @@ def test_push_child_never_sees_ambient_tokens(
     (template / "hooks").mkdir(parents=True)
     witness = tmp_path / "hook-env.txt"
     hook = template / "hooks" / "pre-push"
-    hook.write_text(f"#!/bin/sh\nenv > {witness}\nexit 0\n")
+    hook.write_text(f"#!/bin/sh\nenv > '{witness.as_posix()}'\nexit 0\n")
     hook.chmod(0o755)
     monkeypatch.setenv("GIT_TEMPLATE_DIR", str(template))
     monkeypatch.setenv("GH_TOKEN", "ambient-token")
