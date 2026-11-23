@@ -42,7 +42,7 @@ tests:
 | R2_cancel_only_feature_branches_and_prs | ✅ | 2026-11-23 |
 | R3_single_push_idea_names_evidence | ✅ | 2026-11-23 |
 
-Run at 605f44d878cdd4f7d19724644669e01583254e33
+Run at baece757470d510efa33555cc095abc6570cd470
 ## Related
 
 - [AHA-0037](AHA-0037) - Parent story
