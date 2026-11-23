@@ -6,7 +6,7 @@
 
 - [AHA-0016](AHA-0016) (Entry)
 - [AHA-0016-tests](AHA-0016-tests) (Check)
-- [EVOLUCEAN-DECISION](evolucean/EVOLUCEAN-DECISION) (Entry)
+- EVOLUCEAN-DECISION (Entry)
 - [00-ahabase-ontology-index](00-ahabase-ontology-index) (Entry)
 - [ontology-trust-zone-blueprint](ontology-trust-zone-blueprint) (Rule)
 

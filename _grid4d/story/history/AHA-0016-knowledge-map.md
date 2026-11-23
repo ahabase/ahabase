@@ -5,7 +5,7 @@
 
 ## Consumed
 
-- [evolucean-story](evolucean/evolucean-story) (Entry)
+- evolucean-story (Entry)
 - [open-zone-documents-link-into-the-closed-zone](open-zone-documents-link-into-the-closed-zone) (Entry)
 - [AHABASE-Concepts](AHABASE-Concepts) (Generated)
 - [AHA-0013](AHA-0013) (Entry)

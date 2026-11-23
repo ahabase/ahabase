@@ -5,7 +5,7 @@
 ## Consumed
 
 - [AHABASE-Priorities](AHABASE-Priorities) (Entry)
-- [evolucean-story](evolucean/evolucean-story) (Entry)
+- evolucean-story (Entry)
 - [AHA-0034](AHA-0034) (Entry)
 - [AHA-0034-tests](AHA-0034-tests) (Check)
 - [AHA-0032-tests](AHA-0032-tests) (Check)

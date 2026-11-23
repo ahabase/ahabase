@@ -41,4 +41,4 @@ The path is the established one, minimal and proven before us - three layers, us
 ## Related
 
 - [implementation-ahabase-safe-windows-blueprint](implementation-ahabase-safe-windows-blueprint) - this concept implemented in the safe
-- [AHABASE.md](AHABASE.md) - the both-variants rule of the Epic
+- [AHABASE.md](AHABASE) - the both-variants rule of the Epic

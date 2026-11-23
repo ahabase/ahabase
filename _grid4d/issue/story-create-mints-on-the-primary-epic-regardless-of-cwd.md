@@ -15,7 +15,7 @@ Measured 2026-10-30, AHA-0014's creation: `story create "safe on Windows..."` ru
 
 ## Fix
 
-Lands with story tracking becoming an ahabase capability - [story-tracking-as-an-ahabase-capability](../idea/story-tracking-as-an-ahabase-capability). Until then: always pass `--epic` for non-primary epics.
+Lands with story tracking becoming an ahabase capability - [story-tracking-as-an-ahabase-capability](story-tracking-as-an-ahabase-capability). Until then: always pass `--epic` for non-primary epics.
 
 ## Related
 

@@ -9,10 +9,10 @@
 - [ontology-store-blueprint](ontology-store-blueprint) (Rule)
 - [00-ahabase-safe-ontology-index](00-ahabase-safe-ontology-index) (Entry)
 - [00-ahabase-ontology-index](00-ahabase-ontology-index) (Entry)
-- [evolucean-ahabase-safe-consumption-dossier](evolucean/evolucean-ahabase-safe-consumption-dossier) (Entry)
+- evolucean-ahabase-safe-consumption-dossier (Entry)
 - [implementation-ahabase-safe-blueprint](implementation-ahabase-safe-blueprint) (Rule)
-- [EVOLUCEAN-AHB-0006](evolucean/EVOLUCEAN-AHB-0006) (Entry)
-- [evolucean-ahabase-llm-connection-dossier](evolucean/evolucean-ahabase-llm-connection-dossier) (Entry)
+- EVOLUCEAN-AHB-0006 (Entry)
+- evolucean-ahabase-llm-connection-dossier (Entry)
 - [AHABASE-Priorities](AHABASE-Priorities) (Entry)
 - [ontology-reference-blueprint](ontology-reference-blueprint) (Rule)
 

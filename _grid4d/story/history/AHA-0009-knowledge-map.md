@@ -4,7 +4,7 @@
 
 ## Consumed
 
-- [evolucean-trust-projections-pattern](evolucean/evolucean-trust-projections-pattern) (Entry)
+- evolucean-trust-projections-pattern (Entry)
 - [ontology-health-check-blueprint](ontology-health-check-blueprint) (Rule)
 - [ontology-door-blueprint](ontology-door-blueprint) (Rule)
 - [AHA-0007-tests](AHA-0007-tests) (Check)

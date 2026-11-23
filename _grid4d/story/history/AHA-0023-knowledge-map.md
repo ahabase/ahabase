@@ -9,13 +9,13 @@
 - [AHA-0022-tests](AHA-0022-tests) (Check)
 - [AHA-0021-tests](AHA-0021-tests) (Check)
 - [AHA-0021](AHA-0021) (Entry)
-- [EVOLUCEAN-Priorities](evolucean/EVOLUCEAN-Priorities) (Entry)
-- [evolucean-priorities](evolucean/evolucean-priorities) (Entry)
+- EVOLUCEAN-Priorities (Entry)
+- evolucean-priorities (Entry)
 - [declarations-check-skips-unmapped-trees](declarations-check-skips-unmapped-trees) (Entry)
 
 ## Updated
 
-- [verify-flags-llm-pin-model-tests-while-suite-runs-green](evolucean/verify-flags-llm-pin-model-tests-while-suite-runs-green) (Entry)
+- verify-flags-llm-pin-model-tests-while-suite-runs-green (Entry)
 
 ## Created
 

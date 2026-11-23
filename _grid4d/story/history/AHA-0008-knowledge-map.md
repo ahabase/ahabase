@@ -4,7 +4,7 @@
 
 ## Consumed
 
-- [ahabase-foundation-roadmap](evolucean/ahabase-foundation-roadmap) (Entry)
+- ahabase-foundation-roadmap (Entry)
 
 ## Updated
 

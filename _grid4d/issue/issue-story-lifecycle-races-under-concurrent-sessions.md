@@ -25,7 +25,7 @@ Parallel work is a designed capability: N sessions create, work, and complete N 
 
 ## Fix
 
-[AHA-0032](../story/AHA-0032.md) - parallel story lifecycle under one lock. Until it lands: never run two lifecycle commands at the same moment in one Epic.
+[AHA-0032](AHA-0032) - parallel story lifecycle under one lock. Until it lands: never run two lifecycle commands at the same moment in one Epic.
 
 ## Related
 

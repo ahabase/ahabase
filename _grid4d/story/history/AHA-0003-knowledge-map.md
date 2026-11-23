@@ -5,10 +5,10 @@
 ## Consumed
 
 - [AHA-0002-tests](AHA-0002-tests) (Check)
-- [ahabase-foundation-roadmap](evolucean/ahabase-foundation-roadmap) (Entry)
-- [ontology-trust-zone-blueprint](evolucean/ontology-trust-zone-blueprint) (Rule)
-- [adoption-paths-many-doors-one-core](evolucean/adoption-paths-many-doors-one-core) (Entry)
-- [ontology-idea-blueprint](evolucean/ontology-idea-blueprint) (Rule)
+- ahabase-foundation-roadmap (Entry)
+- ontology-trust-zone-blueprint (Rule)
+- adoption-paths-many-doors-one-core (Entry)
+- ontology-idea-blueprint (Rule)
 
 ## Updated
 

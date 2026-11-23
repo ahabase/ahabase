@@ -3,7 +3,7 @@
 > Lessons learned from the AHA-0034 public handover session - every defect and idea recorded with its fix and its guard, so the same error class never repeats.
 
 **Type:** issue
-**Epic:** [AHABASE](../story/AHABASE)
+**Epic:** [AHABASE](AHABASE)
 **Status:** open (all fixes deployed; the team-work ideas are the standing improvement)
 
 ## The session's error inventory

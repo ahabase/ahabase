@@ -9,7 +9,7 @@
 - [AHA-0009](AHA-0009) (Entry)
 - [AHA-0014-tests](AHA-0014-tests) (Check)
 - [AHABASE-Issues](AHABASE-Issues) (Generated)
-- [evolucean-knowledge-map](evolucean/evolucean-knowledge-map) (Entry)
+- evolucean-knowledge-map (Entry)
 
 ## Updated
 

@@ -4,7 +4,7 @@
 
 ## Consumed
 
-- [ontology-ontology-blueprint](evolucean/ontology-ontology-blueprint) (Rule)
+- ontology-ontology-blueprint (Rule)
 - [AHA-0017-tests](AHA-0017-tests) (Check)
 - [AHA-0016-tests](AHA-0016-tests) (Check)
 - [ontology-capabilities-index](ontology-capabilities-index) (Entry)

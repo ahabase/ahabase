@@ -4,12 +4,12 @@
 
 ## Consumed
 
-- [evolucean-story](evolucean/evolucean-story) (Entry)
+- evolucean-story (Entry)
 - [AHA-0032](AHA-0032) (Entry)
 - [implementation-story-lifecycle-blueprint](implementation-story-lifecycle-blueprint) (Rule)
-- [blueprint-blueprint](evolucean/blueprint-blueprint) (Rule)
+- blueprint-blueprint (Rule)
 - [AHA-0032-tests](AHA-0032-tests) (Check)
-- [evolucean-tests](evolucean/evolucean-tests) (Check)
+- evolucean-tests (Check)
 - [AHA-0022-tests](AHA-0022-tests) (Check)
 
 ## Updated

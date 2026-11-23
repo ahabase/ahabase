@@ -3,7 +3,7 @@
 > A renamed repository's old URL silently resolves to whatever now owns the old name; an unpinned clone then pushes to the wrong repository without warning.
 
 **Type:** issue
-**Epic:** [AHABASE](../story/AHABASE)
+**Epic:** [AHABASE](AHABASE)
 **Raised by:** AHA-0034 handover incident, 2026-11-22
 **Status:** open (machine guard deployed; CLI-side integration pending)
 
