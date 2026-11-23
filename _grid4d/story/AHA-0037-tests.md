@@ -22,8 +22,8 @@ tests:
     expect:
       exit_code: 0
   - name: R2_cancel_only_feature_branches_and_prs
-    description: 'the workflow parses; its group is keyed on the ref; its cancel-in-progress expression, evaluated on the three refs, is false for refs/heads/main and for a tag and true for a feature branch'
-    command: 'PYTHONPATH=$PWD/src ~/ahabase/ahabase/.venv/bin/python -c "import yaml;d=yaml.safe_load(open(\".github/workflows/tests.yml\"));c=d[\"concurrency\"];e=c[\"cancel-in-progress\"];assert \"github.ref\" in c[\"group\"];assert \"refs/heads/main\" in e and \"refs/tags/\" in e;f=lambda ref:(ref!=\"refs/heads/main\") and not ref.startswith(\"refs/tags/\");assert (f(\"refs/heads/main\"),f(\"refs/tags/v0.1\"),f(\"refs/heads/feature/x\"))==(False,False,True)"'
+    description: 'the cancel-in-progress expression of the workflow file itself is translated and evaluated by tests/check_cancel_expression.py on a main ref, a tag ref and a feature ref - false, false, true; a polarity-flipped expression exits 1 (mutant measured at review round 1, seat 9327c5e0: the earlier row evaluated a restatement and let it pass)'
+    command: '~/ahabase/ahabase/.venv/bin/python tests/check_cancel_expression.py'
     expect:
       exit_code: 0
   - name: R3_single_push_idea_names_evidence
