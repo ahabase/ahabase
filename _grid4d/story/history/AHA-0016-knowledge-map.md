@@ -7,7 +7,7 @@
 
 - evolucean-story (Entry)
 - [open-zone-documents-link-into-the-closed-zone](open-zone-documents-link-into-the-closed-zone) (Entry)
-- [AHABASE-Concepts](AHABASE-Concepts) (Generated)
+- AHABASE-Concepts (Generated)
 - [AHA-0013](AHA-0013) (Entry)
 - [AHA-0014](AHA-0014) (Entry)
 - [00-ahabase-ontology-index](00-ahabase-ontology-index) (Entry)

@@ -20,5 +20,5 @@
 
 - [AHA-0033](AHA-0033) (Entry)
 - [AHA-0033-knowledge-map](AHA-0033-knowledge-map) (Entry)
-- [implementation-ahabase-engine-architecture-blueprint](implementation-ahabase-engine-architecture-blueprint) (Rule)
+- implementation-ahabase-engine-architecture-blueprint (Rule)
 - [AHA-0033-tests](AHA-0033-tests) (Check)
